@@ -2,6 +2,7 @@ import type React from "react";
 import type { Metadata } from "next";
 
 import "./globals.css";
+import { AuthProvider } from "./Context/AuthContext";
 
 export const metadata: Metadata = {
   title: "IT Inventory Management System",
@@ -15,7 +16,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <AuthProvider>
+          <main className="md:p-8">{children}</main>
+        </AuthProvider>
+      </body>
     </html>
   );
 }
