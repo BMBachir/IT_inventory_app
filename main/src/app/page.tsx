@@ -172,7 +172,7 @@ export default function Dashboard() {
             <Link href="/login">
               <Button className="flex items-center gap-2 font-body">
                 <LogIn className="h-4 w-4" />
-                Log In
+                Log out
               </Button>
             </Link>
           </div>
