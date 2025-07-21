@@ -18,6 +18,7 @@ import {
   Users,
   UserPlus,
   Scan,
+  LogIn,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -158,10 +159,20 @@ export default function Dashboard() {
                 Add User
               </Button>
             </Link>
+
             <Link href="/add-item">
-              <Button className="flex items-center gap-2 font-body">
+              <Button
+                variant="outline"
+                className="flex items-center gap-2 bg-transparent font-body"
+              >
                 <Plus className="h-4 w-4" />
                 Add Asset
+              </Button>
+            </Link>
+            <Link href="/login">
+              <Button className="flex items-center gap-2 font-body">
+                <LogIn className="h-4 w-4" />
+                Log In
               </Button>
             </Link>
           </div>
