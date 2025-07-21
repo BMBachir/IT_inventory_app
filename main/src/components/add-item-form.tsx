@@ -32,17 +32,29 @@ const mockUsers: User[] = [
   {
     id: "1",
     employeeId: "EMP001",
-    name: "John Doe",
-    email: "john.doe@company.com",
+    name: "BMBachir",
+    email: "BMB@company.com",
     phoneNumber: "+1234567890",
-    service: "IT Department",
-    bloc: "Building A",
-    position: "System Administrator",
+    service: "IT",
+    bloc: "01",
+    position: "Informations Technologiques",
     isActive: true,
     createdAt: new Date(),
     updatedAt: new Date(),
   },
-  // Add more mock users...
+  {
+    id: "2",
+    employeeId: "EMP002",
+    name: "Tarek Gue",
+    email: "Tarek@company.com",
+    phoneNumber: "+1234567890",
+    service: "HSE",
+    bloc: "03",
+    position: "Administrator de machine",
+    isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
 ];
 
 export function AddItemForm() {
@@ -55,22 +67,39 @@ export function AddItemForm() {
     description: "",
     brand: "",
     model: "",
-    selectedUserId: "", // Add this
+    selectedUserId: "",
     specifications: {} as { [key: string]: any },
   });
 
+  // Find the user
+  const selectedEmployeeId = "EMP001";
+  const employee = mockUsers.find(
+    (user) => user.employeeId === selectedEmployeeId
+  );
+
+  // Get category and subcategory (your existing logic)
   const category = selectedCategory
     ? INVENTORY_STRUCTURE.find((c) => c.id === selectedCategory)
     : null;
-  const subcategory =
-    selectedSubcategory && category
-      ? category.subcategories.find((s) => s.id === selectedSubcategory)
-      : null;
 
-  // Generate preview code
+  const subcategory = selectedSubcategory
+    ? INVENTORY_STRUCTURE.flatMap((cat) => cat.subcategories).find(
+        (s) => s.id === selectedSubcategory
+      )
+    : null;
+  // Build the previewCode
   const previewCode =
-    category && subcategory
-      ? generateMaterialCode(category.code, subcategory.code.split(".")[1], 1)
+    employee && employee.bloc && employee.service && subcategory
+      ? (() => {
+          const [categoryCode, subcategoryCode] = subcategory.code.split(".");
+          return `B${employee.bloc.padStart(2, "0")}.${
+            employee.service
+          }.${categoryCode}.${subcategoryCode}.${generateMaterialCode(
+            categoryCode,
+            subcategoryCode,
+            1
+          )}`;
+        })()
       : "";
 
   const handleSpecificationChange = (specId: string, value: any) => {

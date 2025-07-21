@@ -33,7 +33,7 @@ const mockMaterials: (Material & { assignedUser: UserType; location: any })[] =
   [
     {
       id: "2",
-      code: "1.2.045",
+      code: "B01.IT.1.2.045",
       barcode: "1234567890124",
       categoryId: 1,
       subcategoryId: 12,
@@ -218,10 +218,10 @@ export function BarcodeScanner() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => simulateScan("1.2.045")}
+                  onClick={() => simulateScan("B01.IT.1.2.045")}
                   className="font-mono-custom text-xs"
                 >
-                  Scan: 1.2.045 (HP Server)
+                  Scan: B01.IT.1.2.045 (HP Server)
                 </Button>
               </div>
             </div>
