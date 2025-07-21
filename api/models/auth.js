@@ -1,5 +1,5 @@
-import { DataTypes } from "sequelize";
-import sequelize from "../config/db.js";
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/db");
 
 const Auth = sequelize.define("Auth", {
   username: {
@@ -21,4 +21,4 @@ const Auth = sequelize.define("Auth", {
   },
 });
 
-export default Auth;
+module.exports = Auth;

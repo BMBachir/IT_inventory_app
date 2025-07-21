@@ -1,8 +1,8 @@
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import Auth from "../models/auth";
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const Auth = require("../models/auth");
 
-export const registerUser = async (req, res, next) => {
+const registerUser = async (req, res, next) => {
   try {
     const { username, email, password } = req.body;
 
@@ -35,7 +35,7 @@ export const registerUser = async (req, res, next) => {
   }
 };
 
-export const loginUser = async (req, res, next) => {
+const loginUser = async (req, res, next) => {
   const { email, password } = req.body;
 
   try {
@@ -68,7 +68,7 @@ export const loginUser = async (req, res, next) => {
   }
 };
 
-export const signOut = async (req, res, next) => {
+const signOut = async (req, res, next) => {
   try {
     res.clearCookie("access_token");
     res
@@ -79,7 +79,7 @@ export const signOut = async (req, res, next) => {
   }
 };
 
-export const deleteUser = async (req, res, next) => {
+const deleteUser = async (req, res, next) => {
   try {
     await Auth.destroy({ where: { id: req.params.id } });
     res.status(200).json({ message: "User deleted successfully" });
@@ -88,7 +88,7 @@ export const deleteUser = async (req, res, next) => {
   }
 };
 
-export const getUsers = async (req, res, next) => {
+const getUsers = async (req, res, next) => {
   try {
     const users = await Auth.findAll({
       attributes: ["id", "username", "email", "role"],
@@ -97,4 +97,12 @@ export const getUsers = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+};
+
+module.exports = {
+  registerUser,
+  loginUser,
+  signOut,
+  deleteUser,
+  getUsers,
 };
