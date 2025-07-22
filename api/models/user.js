@@ -53,13 +53,6 @@ const User = db.define(
         isEmail: true,
       },
     },
-    username: {
-      type: DataTypes.STRING(255),
-      unique: true,
-    },
-    password: {
-      type: DataTypes.STRING(255),
-    },
     tel: {
       type: DataTypes.STRING(10),
       validate: {

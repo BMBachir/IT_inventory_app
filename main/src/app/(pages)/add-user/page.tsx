@@ -58,7 +58,7 @@ export default function Page() {
   const { user, newUser } = useAuth();
   const handleCreateUser = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/auth/register", {
+      const response = await fetch("http://localhost:5001/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -83,7 +83,7 @@ export default function Page() {
   };
   const fetchUsers = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/auth/get-users", {
+      const response = await fetch("http://localhost:5001/api/auth/get-users", {
         method: "GET",
         credentials: "include",
       });
@@ -100,7 +100,7 @@ export default function Page() {
 
   const handleDelete = async (userId: string) => {
     try {
-      await fetch(`http://localhost:5000/api/auth/delete-user/${userId}`, {
+      await fetch(`http://localhost:5001/api/auth/delete-user/${userId}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -111,6 +111,7 @@ export default function Page() {
       toast.error("Error Supprimant le utilisateur!");
     }
   };
+  console.log(user);
   return (
     <div className="container mx-auto py-6 space-y-6">
       {user?.userData.role === "admin" ? (
@@ -119,7 +120,7 @@ export default function Page() {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">
-                User Management
+                IT User Management
               </h1>
               <p className="text-muted-foreground">
                 Manage your users, their roles and permissions.

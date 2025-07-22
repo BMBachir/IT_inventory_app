@@ -150,13 +150,13 @@ export default function Dashboard() {
                 Manage Users
               </Button>
             </Link>
-            <Link href="/users/add">
+            <Link href="/add-user">
               <Button
                 variant="outline"
                 className="flex items-center gap-2 bg-transparent font-body"
               >
                 <UserPlus className="h-4 w-4" />
-                Add User
+                Add IT User
               </Button>
             </Link>
 
@@ -179,7 +179,7 @@ export default function Dashboard() {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-gray-600 font-heading">
@@ -225,18 +225,6 @@ export default function Dashboard() {
             <CardContent>
               <div className="text-2xl font-bold font-heading">
                 {inventoryStats.locations}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600 font-heading">
-                Pending Maintenance
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600 font-heading">
-                {inventoryStats.pendingMaintenance}
               </div>
             </CardContent>
           </Card>
