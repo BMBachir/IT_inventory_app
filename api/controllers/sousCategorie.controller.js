@@ -56,10 +56,11 @@ exports.getSousCategorie = async (req, res) => {
 // Update SousCategorie
 exports.updateSousCategorie = async (req, res) => {
   try {
-    const { code } = req.params;
+    const { id } = req.params;
     const { nom, categorieId } = req.body;
 
-    const sousCategorie = await SousCategorie.findOne({ where: { code } });
+    const sousCategorie = await SousCategorie.findOne({ where: { code: id } });
+
     if (!sousCategorie) {
       return res.status(404).json({ message: "Sous-catégorie introuvable." });
     }
@@ -75,9 +76,9 @@ exports.updateSousCategorie = async (req, res) => {
 // Delete SousCategorie
 exports.deleteSousCategorie = async (req, res) => {
   try {
-    const { code } = req.params;
+    const { id } = req.params;
 
-    const sousCategorie = await SousCategorie.findOne({ where: { code } });
+    const sousCategorie = await SousCategorie.findOne({ where: { code: id } });
     if (!sousCategorie) {
       return res.status(404).json({ message: "Sous-catégorie introuvable." });
     }
