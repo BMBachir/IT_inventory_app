@@ -41,18 +41,40 @@ exports.deleteMaterial = async (req, res) => {
   }
 };
 
-// 🔹 Get Material by Code (for Douchette/Scanner)
+exports.getAllMaterials = async (req, res) => {
+  try {
+    const materials = await Material.findAll();
+    res.status(200).json(materials);
+  } catch (error) {
+    console.error("Error fetching materials:", error);
+    res.status(500).json({ message: "Failed to retrieve materials" });
+  }
+};
+
+// 🔹 Get Material by Code
 exports.getMaterialByCode = async (req, res) => {
   try {
     const { code } = req.params;
 
     const material = await Material.findOne({
-      where: { code },
+      where: { codebar: code },
       include: [
         {
           model: User,
           as: "user",
           attributes: ["id", "username", "email"],
+        },
+        {
+          model: SousCategorie,
+          as: "sousCategorie",
+          attributes: ["code", "name", "categorieId"],
+          include: [
+            {
+              model: Categorie,
+              as: "categorie",
+              attributes: ["code", "name"],
+            },
+          ],
         },
       ],
     });

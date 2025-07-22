@@ -24,7 +24,7 @@ const Material = db.define(
     Ncpu: { type: DataTypes.INTEGER, allowNull: true },
     Nram: { type: DataTypes.INTEGER, allowNull: true },
     Ndisk: { type: DataTypes.INTEGER, allowNull: true },
-    ecran: { type: DataTypes.INTEGER, allowNull: true },
+    ecran: { type: DataTypes.STRING(200), allowNull: true },
     adf: { type: DataTypes.INTEGER, allowNull: true },
     clavier: { type: DataTypes.INTEGER, allowNull: true },
     souris: { type: DataTypes.INTEGER, allowNull: true },

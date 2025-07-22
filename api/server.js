@@ -22,8 +22,8 @@ app.use(express.json());
 app.use("/api/categories", categorieRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/sous-categories", sousCategorieRoutes);
+app.use("/api/materials", materialRoutes);
 //app.use("/api/users", userRoutes);
-//app.use("/api/materials", materialRoutes);
 
 app.listen(port, () => {
   console.log(`localhost:${port}`);
