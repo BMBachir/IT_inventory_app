@@ -12,7 +12,29 @@ exports.createSousCategorie = async (req, res) => {
         .json({ message: "nom et categorieId sont requis." });
     }
 
-    const sousCategorie = await SousCategorie.create({ nom, categorieId });
+    // Get the last code
+    const lastSousCategorie = await SousCategorie.findOne({
+      attributes: ["code"],
+      where: { categorieId },
+      order: [["code", "DESC"]],
+    });
+
+    let nextNumber = 1;
+
+    if (lastSousCategorie && typeof lastSousCategorie.code === "string") {
+      const parts = lastSousCategorie.code.split(".");
+      const lastNum = parseInt(parts[1]);
+      nextNumber = lastNum + 1;
+    }
+
+    const newCode = `${categorieId}.${nextNumber}`;
+
+    const sousCategorie = await SousCategorie.create({
+      code: newCode,
+      nom,
+      categorieId,
+    });
+
     res.status(201).json(sousCategorie);
   } catch (error) {
     console.error("Create Error:", error);
@@ -59,14 +81,28 @@ exports.updateSousCategorie = async (req, res) => {
     const { id } = req.params;
     const { nom, categorieId } = req.body;
 
+    // Fetch the sous-catégorie by its code (e.g., 1.1, 2.3)
     const sousCategorie = await SousCategorie.findOne({ where: { code: id } });
 
     if (!sousCategorie) {
       return res.status(404).json({ message: "Sous-catégorie introuvable." });
     }
 
+    // Check if the provided categorieId is consistent with the sousCategorie code
+    const expectedPrefix = `${categorieId}.`;
+    if (!String(sousCategorie.code).startsWith(expectedPrefix)) {
+      return res.status(400).json({
+        message: `Le code ${sousCategorie.code} ne correspond pas à la catégorie ${categorieId}.`,
+      });
+    }
+
+    // Update the sous-catégorie
     await sousCategorie.update({ nom, categorieId });
-    res.json(sousCategorie);
+
+    res.status(200).json({
+      message: "Sous-catégorie mise à jour avec succès.",
+      data: sousCategorie,
+    });
   } catch (error) {
     console.error("Update Error:", error);
     res.status(500).json({ message: "Erreur lors de la mise à jour." });

@@ -1,10 +1,30 @@
-const { Material, User } = require("../models");
+const { Material, User, SousCategorie, Categorie } = require("../models");
 
-// 🔹 Create Material
 exports.createMaterial = async (req, res) => {
   try {
     const newMaterial = await Material.create(req.body);
-    res.status(201).json(newMaterial);
+
+    const fullMaterial = await Material.findByPk(newMaterial.id, {
+      include: [
+        {
+          model: User,
+          attributes: ["id", "fullname", "email", "service", "bloc"],
+        },
+        {
+          model: SousCategorie,
+          as: "SousCategorie", // <-- must match exactly with model alias
+          include: [
+            {
+              model: Categorie,
+              as: "categorie",
+              attributes: ["code", "nom"],
+            },
+          ],
+        },
+      ],
+    });
+
+    res.status(201).json(fullMaterial);
   } catch (error) {
     console.error("Create error:", error);
     res.status(500).json({ message: "Failed to create material." });
@@ -14,9 +34,27 @@ exports.createMaterial = async (req, res) => {
 // 🔹 Update Material
 exports.updateMaterial = async (req, res) => {
   try {
+    const { userId, sousCategorieId } = req.body;
+
     const material = await Material.findByPk(req.params.id);
     if (!material)
       return res.status(404).json({ message: "Material not found" });
+
+    // Optional: check if user exists
+    if (userId) {
+      const userExists = await User.findByPk(userId);
+      if (!userExists)
+        return res.status(400).json({ message: "User not found" });
+    }
+
+    // Optional: check if sous-categorie exists
+    if (sousCategorieId) {
+      const scExists = await SousCategorie.findOne({
+        where: { code: sousCategorieId },
+      });
+      if (!scExists)
+        return res.status(400).json({ message: "Sous-catégorie not found" });
+    }
 
     await material.update(req.body);
     res.status(200).json(material);

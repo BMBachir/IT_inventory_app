@@ -40,7 +40,7 @@ const Material = db.define(
     },
 
     sousCategorieId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING,
       allowNull: true,
       references: {
         model: "SousCategorie",

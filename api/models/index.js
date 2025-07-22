@@ -1,18 +1,14 @@
 const db = require("../config/db");
-const Material = require("./material");
 const Categorie = require("./categorie");
-const User = require("./user");
 const SousCategorie = require("./sousCategorie");
+const Material = require("./material");
+const User = require("./user"); // employee
+const AuthUser = require("./auth"); // login
 
-// User ↔ Material
+// Relations
 User.hasMany(Material, { foreignKey: "userId" });
 Material.belongsTo(User, { foreignKey: "userId" });
 
-// Categorie ↔ Material
-Categorie.hasMany(Material, { foreignKey: "categorieId" });
-Material.belongsTo(Categorie, { foreignKey: "categorieId" });
-
-// Categorie ↔ SousCategorie
 Categorie.hasMany(SousCategorie, {
   foreignKey: "categorieId",
   as: "sousCategories",
@@ -22,24 +18,30 @@ SousCategorie.belongsTo(Categorie, {
   as: "categorie",
 });
 
-// SousCategorie ↔ Material (missing relation before)
+Categorie.hasMany(Material, { foreignKey: "categorieId" });
+Material.belongsTo(Categorie, { foreignKey: "categorieId" });
+
 SousCategorie.hasMany(Material, { foreignKey: "sousCategorieId" });
-Material.belongsTo(SousCategorie, { foreignKey: "sousCategorieId" });
+Material.belongsTo(SousCategorie, {
+  foreignKey: "sousCategorieId",
+  as: "SousCategorie",
+});
 
 const models = {
   db,
   User,
+  AuthUser,
   Categorie,
-  Material,
   SousCategorie,
+  Material,
 };
 
-db.sync({ force: true })
+db.sync({ alter: true })
   .then(() => {
-    console.log("✅ Tables and relations recreated successfully");
+    console.log("✅ Database synced");
   })
   .catch((err) => {
-    console.error("❌ Unable to recreate tables:", err);
+    console.error("❌ Sync error:", err);
   });
 
 module.exports = models;
