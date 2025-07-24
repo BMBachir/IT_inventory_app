@@ -2,7 +2,37 @@ const { Material, User, SousCategorie, Categorie } = require("../models");
 
 exports.createMaterial = async (req, res) => {
   try {
-    const newMaterial = await Material.create(req.body);
+    const { userId, sousCategorieId, ...rest } = req.body;
+
+    // Fetch user and sousCategorie
+    const user = await User.findByPk(userId);
+    const sousCategorie = await SousCategorie.findByPk(sousCategorieId);
+
+    if (!user || !sousCategorie) {
+      return res
+        .status(404)
+        .json({ message: "User or SousCategorie not found." });
+    }
+
+    // Generate counter: count how many materials exist with same bloc, service, and sousCategorie
+    const materialCount = await Material.count({
+      where: {
+        userId,
+        sousCategorieId,
+      },
+    });
+
+    const counter = String(materialCount + 1).padStart(2, "0"); // e.g., 01, 02, etc.
+
+    const codebar = `${user.bloc}-${user.service}-${sousCategorie.code}-${counter}`;
+
+    // Create material with generated codebar
+    const newMaterial = await Material.create({
+      ...rest,
+      userId,
+      sousCategorieId,
+      codebar,
+    });
 
     const fullMaterial = await Material.findByPk(newMaterial.id, {
       include: [
@@ -12,7 +42,7 @@ exports.createMaterial = async (req, res) => {
         },
         {
           model: SousCategorie,
-          as: "SousCategorie", // <-- must match exactly with model alias
+          as: "SousCategorie",
           include: [
             {
               model: Categorie,
@@ -92,37 +122,35 @@ exports.getAllMaterials = async (req, res) => {
 // 🔹 Get Material by Code
 exports.getMaterialByCode = async (req, res) => {
   try {
-    const { code } = req.params;
-
+    const codebar = req.params.codebar;
+    console.log(codebar);
     const material = await Material.findOne({
-      where: { codebar: code },
+      where: { codebar },
       include: [
         {
-          model: User,
-          as: "user",
-          attributes: ["id", "username", "email"],
-        },
-        {
           model: SousCategorie,
-          as: "sousCategorie",
-          attributes: ["code", "name", "categorieId"],
+          as: "SousCategorie",
           include: [
             {
               model: Categorie,
               as: "categorie",
-              attributes: ["code", "name"],
             },
           ],
+        },
+        {
+          model: User,
+          as: "user",
         },
       ],
     });
 
-    if (!material)
+    if (!material) {
       return res.status(404).json({ message: "Material not found" });
+    }
 
-    res.status(200).json(material);
+    res.json(material);
   } catch (error) {
     console.error("Fetch by code error:", error);
-    res.status(500).json({ message: "Failed to fetch material." });
+    res.status(500).json({ message: "Internal server error" });
   }
 };

@@ -6,7 +6,7 @@ router.post("/create", materialController.createMaterial);
 
 router.get("/", materialController.getAllMaterials);
 
-router.get("/:id", materialController.getMaterialByCode);
+router.get("/:codebar", materialController.getMaterialByCode);
 
 router.put("/update/:id", materialController.updateMaterial);
 
