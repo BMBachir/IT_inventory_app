@@ -1,16 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -19,91 +9,273 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, Edit, Trash2, UserPlus, Eye } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
+import {
+  PlusCircle,
+  Edit,
+  Trash2,
+  RefreshCw,
+  UserPlus,
+  Search,
+  Edit2,
+  Edit2Icon,
+  Edit3,
+} from "lucide-react";
 import Link from "next/link";
-import { User } from "@/lib/inventory";
-
+import { Label } from "./ui/label";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "./ui/alert-dialog";
 // Mock users data
-const mockUsers: User[] = [
-  {
-    id: "1",
-    employeeId: "EMP001",
-    name: "John Doe",
-    email: "john.doe@company.com",
-    phoneNumber: "+1234567890",
-    service: "IT Department",
-    bloc: "Building A",
-    position: "System Administrator",
-    isActive: true,
-    createdAt: new Date("2024-01-15"),
-    updatedAt: new Date("2024-01-15"),
-  },
-  {
-    id: "2",
-    employeeId: "EMP002",
-    name: "Sarah Wilson",
-    email: "sarah.wilson@company.com",
-    phoneNumber: "+1234567891",
-    service: "Data Center",
-    bloc: "Building B",
-    position: "Network Engineer",
-    isActive: true,
-    createdAt: new Date("2024-01-16"),
-    updatedAt: new Date("2024-01-16"),
-  },
-  {
-    id: "3",
-    employeeId: "EMP003",
-    name: "Mike Johnson",
-    email: "mike.johnson@company.com",
-    phoneNumber: "+1234567892",
-    service: "Finance",
-    bloc: "Building A",
-    position: "Financial Analyst",
-    isActive: true,
-    createdAt: new Date("2024-01-17"),
-    updatedAt: new Date("2024-01-17"),
-  },
-  {
-    id: "4",
-    employeeId: "EMP004",
-    name: "Lisa Chen",
-    email: "lisa.chen@company.com",
-    phoneNumber: "+1234567893",
-    service: "Network Team",
-    bloc: "Building C",
-    position: "Network Specialist",
-    isActive: false,
-    createdAt: new Date("2024-01-18"),
-    updatedAt: new Date("2024-01-18"),
-  },
+
+const userSchema = z.object({
+  fullname: z
+    .string()
+    .min(3, { message: "Full name must be at least 3 characters." }),
+  email: z.string().email({ message: "Invalid email address." }),
+  tel: z
+    .string()
+    .length(10, { message: "Telephone must be exactly 10 digits." })
+    .regex(/^\d+$/, { message: "Telephone must be numeric." }),
+  service: z.enum([
+    "PROD",
+    "SUPPLY",
+    "IT",
+    "MG",
+    "HR",
+    "TECH",
+    "COMM",
+    "MRK",
+    "DFC",
+    "HSE",
+    "SECRT",
+    "QUALITE",
+    "CERTILAB",
+  ]),
+  bloc: z.enum([
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "H1",
+    "H2",
+    "H3",
+    "H4",
+  ]),
+});
+
+const serviceOptions = [
+  "PROD",
+  "SUPPLY",
+  "IT",
+  "MG",
+  "HR",
+  "TECH",
+  "COMM",
+  "MRK",
+  "DFC",
+  "HSE",
+  "SECRT",
+  "QUALITE",
+  "CERTILAB",
+];
+
+const blocOptions = [
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "H1",
+  "H2",
+  "H3",
+  "H4",
 ];
 
 export function UserManagement() {
-  const [users, setUsers] = useState<User[]>(mockUsers);
   const [searchTerm, setSearchTerm] = useState("");
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.employeeId.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const API_BASE = process.env.NEXT_PUBLIC_API_PORT_URL;
 
-  const handleDeleteUser = (userId: string) => {
-    setUsers(users.filter((user) => user.id !== userId));
+  type UserFormData = {
+    fullname: string;
+    email: string;
+    tel: string;
+    service:
+      | "PROD"
+      | "SUPPLY"
+      | "IT"
+      | "MG"
+      | "HR"
+      | "TECH"
+      | "COMM"
+      | "MRK"
+      | "DFC"
+      | "HSE"
+      | "SECRT"
+      | "QUALITE"
+      | "CERTILAB";
+    bloc:
+      | "1"
+      | "2"
+      | "3"
+      | "4"
+      | "5"
+      | "6"
+      | "7"
+      | "8"
+      | "H1"
+      | "H2"
+      | "H3"
+      | "H4";
+  };
+  type User = UserFormData & { id: string };
+
+  const form = useForm<UserFormData>({
+    resolver: zodResolver(userSchema),
+    defaultValues: {
+      fullname: "",
+      email: "",
+      tel: "",
+      service: "IT",
+      bloc: "1",
+    },
+  });
+
+  const fetchUsers = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/users/`);
+      const data = await res.json();
+      setUsers(data);
+      setError(null);
+    } catch (err) {
+      setError("Failed to fetch users");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const toggleUserStatus = (userId: string) => {
-    setUsers(
-      users.map((user) =>
-        user.id === userId
-          ? { ...user, isActive: !user.isActive, updatedAt: new Date() }
-          : user
-      )
-    );
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const handleFormSubmit = async (data: UserFormData) => {
+    try {
+      const url = editingUser
+        ? `${API_BASE}/api/users/update/${editingUser.id}`
+        : `${API_BASE}/api/users/create`;
+
+      const method = editingUser ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!res.ok) throw new Error("Failed to save user");
+
+      await fetchUsers();
+      setIsFormOpen(false);
+      setEditingUser(null);
+      form.reset();
+    } catch (err) {
+      console.error("Failed to submit user:", err);
+    }
+  };
+
+  const handleAddNew = () => {
+    setEditingUser(null);
+    form.reset({
+      fullname: "",
+      email: "",
+      tel: "",
+      service: "IT",
+      bloc: "1",
+    });
+    setIsFormOpen(true);
+  };
+
+  const handleEdit = (user: User) => {
+    setEditingUser(user);
+    form.reset(user);
+    setIsFormOpen(true);
+  };
+
+  const openDeleteDialog = (user: User) => {
+    setSelectedUser(user);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteUser = async () => {
+    if (!selectedUser) return;
+    try {
+      const res = await fetch(
+        `${API_BASE}/api/users/delete/${selectedUser.id}`,
+        {
+          method: "DELETE",
+        }
+      );
+      if (!res.ok) throw new Error("Failed to delete user");
+
+      await fetchUsers();
+      setIsDeleteDialogOpen(false);
+      setSelectedUser(null);
+    } catch (err) {
+      console.error("Error deleting user:", err);
+    }
   };
 
   return (
@@ -118,16 +290,118 @@ export function UserManagement() {
             Manage users who can be assigned IT assets
           </p>
         </div>
-        <Link href="/users/add">
-          <Button className="flex items-center gap-2">
-            <UserPlus className="h-4 w-4" />
-            Add New User
-          </Button>
-        </Link>
+        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={handleAddNew} className="flex items-center gap-2">
+              <UserPlus className="h-4 w-4" />
+              Add New User
+            </Button>
+          </DialogTrigger>
+
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {editingUser ? "Edit User" : "Add New User"}
+              </DialogTitle>
+              <DialogDescription>
+                Fill out the form to add a new user to the system.
+              </DialogDescription>
+            </DialogHeader>
+
+            {/* Form starts */}
+            <form
+              onSubmit={form.handleSubmit(handleFormSubmit)}
+              className="space-y-4 mt-4"
+            >
+              <div>
+                <Label>Full Name</Label>
+                <Input {...form.register("fullname")} />
+                {form.formState.errors.fullname && (
+                  <p className="text-sm text-red-500">
+                    {form.formState.errors.fullname.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label>Email</Label>
+                <Input type="email" {...form.register("email")} />
+                {form.formState.errors.email && (
+                  <p className="text-sm text-red-500">
+                    {form.formState.errors.email.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label>Telephone</Label>
+                <Input {...form.register("tel")} />
+                {form.formState.errors.tel && (
+                  <p className="text-sm text-red-500">
+                    {form.formState.errors.tel.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label>Service</Label>
+                <Select
+                  value={form.watch("service")}
+                  onValueChange={(value) =>
+                    form.setValue("service", value as UserFormData["service"])
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select service" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {serviceOptions.map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Bloc</Label>
+                <Select
+                  value={form.watch("bloc")}
+                  onValueChange={(value) =>
+                    form.setValue("bloc", value as UserFormData["bloc"])
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select bloc" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {blocOptions.map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <DialogFooter>
+                <Button type="submit">
+                  {editingUser ? "Update" : "Create"}
+                </Button>
+                <DialogClose asChild>
+                  <Button type="button" variant="ghost">
+                    Cancel
+                  </Button>
+                </DialogClose>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-600 font-body">
@@ -138,30 +412,7 @@ export function UserManagement() {
             <div className="text-2xl font-bold font-body">{users.length}</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600 font-body">
-              Active Users
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600 font-body">
-              {users.filter((u) => u.isActive).length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600 font-body">
-              Inactive Users
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600 font-body">
-              {users.filter((u) => !u.isActive).length}
-            </div>
-          </CardContent>
-        </Card>
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-600 font-body">
@@ -189,91 +440,88 @@ export function UserManagement() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
-                placeholder="Search users by name, email, service, or employee ID..."
+                placeholder="Search users by name, email, service..."
+                className="pl-10 font-body"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 font-body"
               />
             </div>
           </div>
 
           {/* Users Table */}
-          <div className="border rounded-lg">
+          <div className="border rounded-lg overflow-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="font-body">Employee ID</TableHead>
+                  <TableHead className="font-body">ID</TableHead>
                   <TableHead className="font-body">Name</TableHead>
                   <TableHead className="font-body">Email</TableHead>
                   <TableHead className="font-body">Service</TableHead>
                   <TableHead className="font-body">Bloc</TableHead>
-                  <TableHead className="font-body">Position</TableHead>
-                  <TableHead className="font-body">Status</TableHead>
+
                   <TableHead className="font-body">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-mono-custom">
-                      {user.employeeId}
-                    </TableCell>
-                    <TableCell className="font-medium font-body">
-                      {user.name}
-                    </TableCell>
-                    <TableCell className="font-body">{user.email}</TableCell>
-                    <TableCell className="font-body">{user.service}</TableCell>
-                    <TableCell className="font-body">{user.bloc}</TableCell>
-                    <TableCell className="font-body">{user.position}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={user.isActive ? "default" : "secondary"}
-                        className="font-body"
-                      >
-                        {user.isActive ? "Active" : "Inactive"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Button variant="ghost" size="sm">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm">
-                          <Edit className="h-4 w-4" />
-                        </Button>
+                {users
+                  .filter((user) =>
+                    [user.fullname, user.email, user.service]
+                      .join(" ")
+                      .toLowerCase()
+                      .includes(searchTerm.toLowerCase())
+                  )
+                  .map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-body">{user.id}</TableCell>
+                      <TableCell className="font-body">
+                        {user.fullname}
+                      </TableCell>
+                      <TableCell className="font-body">{user.email}</TableCell>
+                      <TableCell className="font-body">
+                        {user.service}
+                      </TableCell>
+                      <TableCell className="font-body">{user.bloc}</TableCell>
+
+                      <TableCell className="space-x-2">
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleUserStatus(user.id)}
-                          className={
-                            user.isActive
-                              ? "text-red-600 font-body"
-                              : "text-green-600 font-body"
-                          }
+                          className="bg-green-500 hover:bg-green-600  rounded-full text-white"
+                          onClick={() => handleEdit(user)}
                         >
-                          {user.isActive ? "Deactivate" : "Activate"}
+                          <Edit3 /> Edit
                         </Button>
+
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteUser(user.id)}
-                          className="text-red-600 font-body"
+                          className="bg-red-500 hover:bg-red-600  rounded-full text-white"
+                          onClick={() => openDeleteDialog(user)}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 /> Delete
                         </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      </TableCell>
+                    </TableRow>
+                  ))}
               </TableBody>
             </Table>
+            <AlertDialog
+              open={isDeleteDialogOpen}
+              onOpenChange={setIsDeleteDialogOpen}
+            >
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete
+                    the user.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDeleteUser}>
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
-
-          {filteredUsers.length === 0 && (
-            <div className="text-center py-8 text-gray-500 font-body">
-              No users found matching your search criteria.
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>
