@@ -19,10 +19,10 @@ import {
   UserPlus,
   Scan,
   LogIn,
+  Tags,
 } from "lucide-react";
 import Link from "next/link";
 
-// Mock data with user assignments
 const inventoryStats = {
   totalItems: 1247,
   totalUsers: 156,
@@ -150,13 +150,13 @@ export default function Dashboard() {
                 Manage Users
               </Button>
             </Link>
-            <Link href="/add-user">
+            <Link href="/categories">
               <Button
                 variant="outline"
                 className="flex items-center gap-2 bg-transparent font-body"
               >
-                <UserPlus className="h-4 w-4" />
-                Add IT User
+                <Tags className="h-4 w-4" />
+                Categories
               </Button>
             </Link>
 
@@ -166,7 +166,16 @@ export default function Dashboard() {
                 className="flex items-center gap-2 bg-transparent font-body"
               >
                 <Plus className="h-4 w-4" />
-                Add Asset
+                Materials
+              </Button>
+            </Link>
+            <Link href="/add-user">
+              <Button
+                variant="outline"
+                className="flex items-center gap-2 bg-transparent font-body"
+              >
+                <UserPlus className="h-4 w-4" />
+                Add IT User
               </Button>
             </Link>
             <Link href="/login">

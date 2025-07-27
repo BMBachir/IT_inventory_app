@@ -49,6 +49,8 @@ import {
   Edit2,
   Edit2Icon,
   Edit3,
+  ArrowLeftFromLineIcon,
+  ArrowLeft,
 } from "lucide-react";
 import Link from "next/link";
 import { Label } from "./ui/label";
@@ -283,6 +285,12 @@ export function UserManagement() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
+          <Link
+            href={"/"}
+            className="flex justify-start items-center gap-2 bg-gray-100 p-2 rounded-full w-full"
+          >
+            <ArrowLeft className="h-4 w-4" /> back
+          </Link>
           <h1 className="text-3xl font-heading font-bold text-gray-900">
             User Management
           </h1>
