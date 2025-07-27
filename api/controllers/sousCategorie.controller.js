@@ -78,26 +78,27 @@ exports.getSousCategorie = async (req, res) => {
 // Update SousCategorie
 exports.updateSousCategorie = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { nom, categorieId } = req.body;
+    const { id } = req.params; // this is the PK
+    const { code, nom, categorieId } = req.body;
 
-    // Fetch the sous-catégorie by its code (e.g., 1.1, 2.3)
-    const sousCategorie = await SousCategorie.findOne({ where: { code: id } });
+    if (!code || !nom || !categorieId) {
+      return res.status(400).json({ message: "Champs requis manquants." });
+    }
+
+    const sousCategorie = await SousCategorie.findByPk(id);
 
     if (!sousCategorie) {
       return res.status(404).json({ message: "Sous-catégorie introuvable." });
     }
 
-    // Check if the provided categorieId is consistent with the sousCategorie code
-    const expectedPrefix = `${categorieId}.`;
-    if (!String(sousCategorie.code).startsWith(expectedPrefix)) {
+    // Valide que le code commence bien par `${categorieId}.`
+    if (!code.startsWith(`${categorieId}.`)) {
       return res.status(400).json({
-        message: `Le code ${sousCategorie.code} ne correspond pas à la catégorie ${categorieId}.`,
+        message: `Le code ${code} ne correspond pas à la catégorie ${categorieId}.`,
       });
     }
 
-    // Update the sous-catégorie
-    await sousCategorie.update({ nom, categorieId });
+    await sousCategorie.update({ code, nom, categorieId });
 
     res.status(200).json({
       message: "Sous-catégorie mise à jour avec succès.",
