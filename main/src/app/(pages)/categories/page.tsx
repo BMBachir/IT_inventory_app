@@ -3,7 +3,13 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -14,6 +20,8 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_PORT_URL ?? "http://localhost:5001";
@@ -47,6 +55,7 @@ const fetchSousCategories = async () =>
 const createSousCategorie = async (data: {
   nom: string;
   categorieId: number;
+  code: string;
 }) =>
   fetch(`${API_BASE}/api/sous-categories/create`, {
     method: "POST",
@@ -111,8 +120,10 @@ export default function CategoriesPage() {
       await createSousCategorie({
         nom: newSousNom,
         categorieId: parseInt(selectedCategorieId),
+        code: newSousCode,
       });
       setNewSousNom("");
+      setNewSousCode("");
       setSelectedCategorieId("");
       await load();
     }
@@ -191,10 +202,29 @@ export default function CategoriesPage() {
     setIsSousFormOpen(false);
     await load();
   };
-
+  const router = useRouter();
   return (
     <div className="p-6 space-y-10 max-w-5xl mx-auto">
-      {/* Categories Section */}
+      <div className="flex items-center gap-4 mb-8">
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-9 w-9 flex-shrink-0" // Added flex-shrink-0 to prevent resizing
+          onClick={() => router.back()}
+        >
+          <ArrowLeft className="h-5 w-5" />
+          <span className="sr-only">Back</span>
+        </Button>
+        {/* A div to group heading and subheading */}
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Categories Management
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            Manage all Categories, Sous-categories.
+          </p>
+        </div>
+      </div>
       <Card>
         <CardHeader className="flex flex-row justify-between items-center">
           <CardTitle className="text-xl">Categories</CardTitle>
@@ -241,9 +271,13 @@ export default function CategoriesPage() {
       {/* Dialog for Add/Edit */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
-          <h2 className="text-lg font-semibold mb-4">
+          <DialogTitle className="text-lg font-semibold mb-4">
             {editing ? "Edit" : "New"} Category
-          </h2>
+          </DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground mb-4">
+            Remplissez les champs ci-dessous pour créer ou modifier une
+            catégorie.
+          </DialogDescription>
           <div className="space-y-4">
             <Label htmlFor="nom">Category Name</Label>
             <Input
@@ -337,10 +371,14 @@ export default function CategoriesPage() {
             )}
             <Dialog open={isSousFormOpen} onOpenChange={setIsSousFormOpen}>
               <DialogContent>
-                <h2 className="text-lg font-semibold mb-2">
+                <DialogTitle className="text-lg font-semibold mb-2">
                   {editingSousCategorie ? "Modifier" : "Nouvelle"}{" "}
                   Sous-Catégorie
-                </h2>
+                </DialogTitle>
+                <DialogDescription className="text-sm text-muted-foreground mb-4">
+                  Remplissez les champs ci-dessous pour créer ou modifier une
+                  sous-catégorie.
+                </DialogDescription>
                 <Input
                   value={newSousNom}
                   onChange={(e) => setNewSousNom(e.target.value)}
