@@ -5,26 +5,31 @@ const Material = require("./material");
 const User = require("./user"); // employee
 const AuthUser = require("./auth"); // login
 
-// Relations
+// Define Associations
+
+// 1. User ↔ Material
 User.hasMany(Material, { foreignKey: "userId" });
 Material.belongsTo(User, { foreignKey: "userId" });
 
+// 2. Categorie ↔ SousCategorie
 Categorie.hasMany(SousCategorie, {
   foreignKey: "categorieId",
-  as: "sousCategories",
+  as: "sousCategories", // alias used once only
 });
 SousCategorie.belongsTo(Categorie, {
   foreignKey: "categorieId",
   as: "categorie",
 });
 
+// 3. Categorie ↔ Material
 Categorie.hasMany(Material, { foreignKey: "categorieId" });
 Material.belongsTo(Categorie, { foreignKey: "categorieId" });
 
+// 4. SousCategorie ↔ Material
 SousCategorie.hasMany(Material, { foreignKey: "sousCategorieId" });
 Material.belongsTo(SousCategorie, {
   foreignKey: "sousCategorieId",
-  as: "SousCategorie",
+  as: "sousCategorie", // ✅ changed from "SousCategorie" to lowercase
 });
 
 const models = {
@@ -36,6 +41,7 @@ const models = {
   Material,
 };
 
+// Sync database
 db.sync({ alter: true })
   .then(() => {
     console.log("✅ Database synced");

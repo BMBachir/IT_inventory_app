@@ -4,10 +4,15 @@ const { DataTypes } = require("sequelize");
 const SousCategorie = db.define(
   "SousCategorie",
   {
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
     code: {
       type: DataTypes.STRING,
       allowNull: false,
-      primaryKey: true, // ✅ Make 'code' the primary key
+      unique: true, // ✅ Keep it unique, not primary
     },
     nom: {
       type: DataTypes.STRING(255),
@@ -18,15 +23,13 @@ const SousCategorie = db.define(
       allowNull: false,
       references: {
         model: "Categorie",
-        key: "code", // ✅ Correct foreign key
+        key: "code",
       },
     },
   },
   {
     timestamps: true,
     freezeTableName: true,
-    // ✅ Tell Sequelize NOT to create or expect 'id'
-    id: false,
   }
 );
 
