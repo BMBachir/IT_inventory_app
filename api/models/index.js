@@ -28,7 +28,10 @@ Categorie.hasMany(Material, { foreignKey: "categorieId" });
 Material.belongsTo(Categorie, { foreignKey: "categorieId" });
 
 // 4. SousCategorie ↔ Material
-SousCategorie.hasMany(Material, { foreignKey: "sousCategorieId" });
+SousCategorie.hasMany(Material, {
+  foreignKey: "sousCategorieId",
+  sourceKey: "code",
+});
 Material.belongsTo(SousCategorie, {
   foreignKey: "sousCategorieId",
   targetKey: "code",

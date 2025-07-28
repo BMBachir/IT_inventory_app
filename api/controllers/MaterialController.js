@@ -111,10 +111,29 @@ exports.deleteMaterial = async (req, res) => {
     res.status(500).json({ message: "Failed to delete material." });
   }
 };
-
 exports.getAllMaterials = async (req, res) => {
   try {
-    const materials = await Material.findAll();
+    const materials = await Material.findAll({
+      include: [
+        {
+          model: User,
+          attributes: ["id", "fullname", "email", "service", "bloc"],
+        },
+        {
+          model: SousCategorie,
+          as: "SousCategorie",
+          attributes: ["code", "nom"],
+          include: [
+            {
+              model: Categorie,
+              as: "categorie",
+              attributes: ["code", "nom"],
+            },
+          ],
+        },
+      ],
+    });
+
     res.status(200).json(materials);
   } catch (error) {
     console.error("Error fetching materials:", error);

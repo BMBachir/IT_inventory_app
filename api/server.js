@@ -5,6 +5,7 @@ const authRoutes = require("./routes/authRoutes");
 const sousCategorieRoutes = require("./routes/sousCategorieRoutes");
 const materialRoutes = require("./routes/materialRoutes");
 const userRoutes = require("./routes/userRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 
 require("./models");
 const app = express();
@@ -21,6 +22,7 @@ app.use(express.json());
 
 app.use("/api/categories", categorieRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/sous-categories", sousCategorieRoutes);
 app.use("/api/materials", materialRoutes);
 app.use("/api/users", userRoutes);
