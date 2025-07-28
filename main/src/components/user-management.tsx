@@ -539,7 +539,6 @@ export function UserManagement() {
         </Card>
       </div>
 
-      {/* Search and Filters */}
       <Card className="border-0 shadow-sm rounded-xl overflow-hidden">
         <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 border-b border-gray-100">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
