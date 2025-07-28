@@ -1,10 +1,10 @@
-import { BarcodeScanner } from "@/components/barcode-scanner";
+import { ScannerPage } from "@/components/barcode-scanner";
 import React from "react";
 
 const page = () => {
   return (
     <div>
-      <BarcodeScanner />
+      <ScannerPage />
     </div>
   );
 };
