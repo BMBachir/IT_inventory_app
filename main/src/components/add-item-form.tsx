@@ -106,7 +106,7 @@ export function AddItemForm() {
       id: "adf",
       name: "ADF",
       type: "number",
-      placeholder: "e.g., 1 (for scanner)",
+      placeholder: "e.g.,yes (for scanner)",
     },
     { id: "clavier", name: "Clavier", type: "number", placeholder: "e.g., 1" },
     { id: "souris", name: "Souris", type: "number", placeholder: "e.g., 1" },
@@ -138,7 +138,6 @@ export function AddItemForm() {
     ? subcategories.filter((s) => s.categorieId === selectedCategory)
     : [];
 
-  // Find the selected user, category, and subcategory from the fetched data
   const selectedUser = users.find(
     (u) => String(u.id) === formData.selectedUserId
   );
@@ -149,30 +148,39 @@ export function AddItemForm() {
     ? subcategories.find((s) => Number(s.code) === selectedSubcategory)
     : null;
 
-  // Function to determine which specifications to render based on category/subcategory
   const getSpecsToRender = (): SpecificationItem[] => {
-    if (!category) {
-      return []; // No category selected, no specs to show
+    if (!category || !subcategory) return [];
+
+    // CAS 1 : Computer > Server
+    if (
+      category.nom.toUpperCase() === "COMPUTER" &&
+      subcategory.nom.toUpperCase().startsWith("SERVER")
+    ) {
+      return allFixedSpecifications.filter(
+        (spec) =>
+          !["adf", "clavier", "souris", "usb", "ecran"].includes(spec.id)
+      );
     }
 
-    if (category.nom === "Computer") {
-      if (subcategory?.nom === "Server") {
-        // For Computer -> Server, show all specs
-        return allFixedSpecifications;
-      } else {
-        // For Computer -> Other Subcategory (not Server), show all except Ncpu, Nram, Ndisk
-        return allFixedSpecifications.filter(
-          (spec) => !["ncpu", "nram", "ndisk"].includes(spec.id)
-        );
-      }
-    } else if (category.nom === "Imagerie") {
-      if (subcategory?.nom === "Scanner") {
-        // For Imagerie -> Scanner, show only ADF
-        return allFixedSpecifications.filter((spec) => spec.adf === "adf");
-      }
+    // CAS 2 : Computer > Laptop
+    if (
+      category.nom.toUpperCase() === "COMPUTER" &&
+      subcategory.nom.toUpperCase() === "LAPTOP"
+    ) {
+      return allFixedSpecifications.filter(
+        (spec) => !["ncpu", "nram", "ndisk", "adf"].includes(spec.id)
+      );
     }
 
-    // Default: if no specific rule matches, show all specs (or adjust as needed)
+    // CAS 3 : Imagerie > Scanner
+    if (
+      category.nom.toUpperCase() === "IMAGERIE" &&
+      subcategory.nom.toUpperCase() === "SCANNER"
+    ) {
+      return allFixedSpecifications.filter((spec) => spec.id === "adf");
+    }
+
+    // CAS PAR DÉFAUT : tout afficher
     return allFixedSpecifications;
   };
 
@@ -208,7 +216,7 @@ export function AddItemForm() {
       souris: formData.specifications.souris,
       usb: formData.specifications.usb,
       userId: Number(formData.selectedUserId),
-      sousCategorieId: selectedSubcategory?.toString() || null,
+      sousCategorieId: selectedSubcategory || null,
       categorieId: selectedCategory,
     };
 
@@ -253,7 +261,7 @@ export function AddItemForm() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="max-w-4xl mx-auto p-6 space-y-6">
+      <div className="max-w-4xl mx-auto  space-y-6">
         <Card>
           <CardHeader>
             <CardTitle className="font-heading">Add New IT Asset</CardTitle>
@@ -375,48 +383,72 @@ export function AddItemForm() {
                 </div>
               </div>
 
-              {/* Dynamic Specifications */}
-              {specsToDisplay.length > 0 && ( // Only render if there are specs to display
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {specsToDisplay.map((spec) => (
-                    <div key={spec.id} className="space-y-2">
-                      <Label htmlFor={spec.id} className="font-body">
-                        {spec.name}
-                      </Label>
-                      {spec.type === "text" && (
-                        <Input
-                          id={spec.id}
-                          value={formData.specifications[spec.id] || ""}
-                          onChange={(e) =>
-                            handleSpecificationChange(spec.id, e.target.value)
-                          }
-                          placeholder={spec.placeholder}
-                        />
-                      )}
-                      {spec.type === "number" && (
-                        <Input
-                          id={spec.id}
-                          type="number"
-                          value={
-                            formData.specifications[spec.id] === null
-                              ? ""
-                              : formData.specifications[spec.id]
-                          }
-                          onChange={(e) =>
-                            handleSpecificationChange(
-                              spec.id,
-                              e.target.value === ""
-                                ? null
-                                : Number(e.target.value)
-                            )
-                          }
-                          placeholder={spec.placeholder}
-                        />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {specsToDisplay.map((spec) => (
+                  <div key={spec.id} className="space-y-1">
+                    <Label
+                      htmlFor={spec.id}
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      {spec.name}
+                    </Label>
+
+                    {spec.id === "adf" ? (
+                      <Select
+                        value={
+                          formData.specifications.adf === null
+                            ? ""
+                            : formData.specifications.adf === 1
+                            ? "yes"
+                            : "no"
+                        }
+                        onValueChange={(value) =>
+                          handleSpecificationChange(
+                            "adf",
+                            value === "yes" ? 1 : 0
+                          )
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="ADF disponible ?" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : spec.type === "text" ? (
+                      <Input
+                        id={spec.id}
+                        value={formData.specifications[spec.id] || ""}
+                        onChange={(e) =>
+                          handleSpecificationChange(spec.id, e.target.value)
+                        }
+                        placeholder={spec.placeholder}
+                      />
+                    ) : (
+                      <Input
+                        id={spec.id}
+                        type="number"
+                        value={
+                          formData.specifications[spec.id] === null
+                            ? ""
+                            : formData.specifications[spec.id]
+                        }
+                        onChange={(e) =>
+                          handleSpecificationChange(
+                            spec.id,
+                            e.target.value === ""
+                              ? null
+                              : Number(e.target.value)
+                          )
+                        }
+                        placeholder={spec.placeholder}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
 
             <Separator />
