@@ -14,10 +14,12 @@ Material.belongsTo(User, { foreignKey: "userId" });
 // 2. Categorie ↔ SousCategorie
 Categorie.hasMany(SousCategorie, {
   foreignKey: "categorieId",
-  as: "sousCategories", // alias used once only
+  as: "sousCategories",
 });
+
 SousCategorie.belongsTo(Categorie, {
   foreignKey: "categorieId",
+  targetKey: "code",
   as: "categorie",
 });
 
@@ -26,10 +28,14 @@ Categorie.hasMany(Material, { foreignKey: "categorieId" });
 Material.belongsTo(Categorie, { foreignKey: "categorieId" });
 
 // 4. SousCategorie ↔ Material
-SousCategorie.hasMany(Material, { foreignKey: "sousCategorieId" });
+SousCategorie.hasMany(Material, {
+  foreignKey: "sousCategorieId",
+  sourceKey: "code",
+});
 Material.belongsTo(SousCategorie, {
   foreignKey: "sousCategorieId",
-  as: "sousCategorie", // ✅ changed from "SousCategorie" to lowercase
+  targetKey: "code",
+  as: "SousCategorie",
 });
 
 const models = {

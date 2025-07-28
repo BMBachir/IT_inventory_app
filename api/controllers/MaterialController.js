@@ -3,10 +3,12 @@ const { Material, User, SousCategorie, Categorie } = require("../models");
 exports.createMaterial = async (req, res) => {
   try {
     const { userId, sousCategorieId, ...rest } = req.body;
-
+    console.log(sousCategorieId);
     // Fetch user and sousCategorie
     const user = await User.findByPk(userId);
-    const sousCategorie = await SousCategorie.findByPk(sousCategorieId);
+    const sousCategorie = await SousCategorie.findOne({
+      where: { code: sousCategorieId },
+    });
 
     if (!user || !sousCategorie) {
       return res
@@ -43,6 +45,7 @@ exports.createMaterial = async (req, res) => {
         {
           model: SousCategorie,
           as: "SousCategorie",
+          attributes: ["code", "nom"],
           include: [
             {
               model: Categorie,
@@ -108,10 +111,29 @@ exports.deleteMaterial = async (req, res) => {
     res.status(500).json({ message: "Failed to delete material." });
   }
 };
-
 exports.getAllMaterials = async (req, res) => {
   try {
-    const materials = await Material.findAll();
+    const materials = await Material.findAll({
+      include: [
+        {
+          model: User,
+          attributes: ["id", "fullname", "email", "service", "bloc"],
+        },
+        {
+          model: SousCategorie,
+          as: "SousCategorie",
+          attributes: ["code", "nom"],
+          include: [
+            {
+              model: Categorie,
+              as: "categorie",
+              attributes: ["code", "nom"],
+            },
+          ],
+        },
+      ],
+    });
+
     res.status(200).json(materials);
   } catch (error) {
     console.error("Error fetching materials:", error);
