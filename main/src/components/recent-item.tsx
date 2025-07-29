@@ -8,7 +8,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ChevronDown, Search, Plus, Printer, Edit3 } from "lucide-react"; // Added Printer icon
+import {
+  ChevronDown,
+  Search,
+  Plus,
+  Printer,
+  Edit3,
+  Trash2Icon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -29,10 +36,18 @@ import {
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { AddItemForm } from "@/components/add-item-form";
 import EditMaterialDialog from "./EditMaterialDialog";
-
-// Load JsBarcode library dynamically
-// This is done by directly injecting the script into the new window for printing
-// We don't need to import it here for the main component.
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "./ui/alert-dialog";
 
 export type Material = {
   id: number;
@@ -90,6 +105,7 @@ function RecentItem() {
 
   const itemsPerPage = 10;
   const pageWindowSize = 5;
+
   const fetchData = async () => {
     try {
       const data: Material[] = await fetch(`${API_BASE}/api/materials/`).then(
@@ -348,6 +364,25 @@ function RecentItem() {
     setSelectedMaterial(null);
     fetchData(); // or reload();
   };
+
+  const handleDelete = async (id: number) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/materials/delete/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to delete");
+      }
+
+      toast.success("Matériel supprimé !");
+      fetchData();
+    } catch (error) {
+      console.error("Delete error:", error);
+      toast.error("Erreur lors de la suppression.");
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -501,6 +536,35 @@ function RecentItem() {
                 >
                   <Edit3 className="h-5 w-5 text-green-600" />
                 </Button>
+
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title="Supprimer"
+                      className="hover:bg-red-100"
+                    >
+                      <Trash2Icon className="h-5 w-5 text-red-600" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>
+                        Confirmer la suppression
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Cette action supprimera définitivement ce matériel.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Annuler</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleDelete(item.id)}>
+                        Supprimer
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
           ))}
