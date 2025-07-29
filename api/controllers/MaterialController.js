@@ -111,6 +111,7 @@ exports.deleteMaterial = async (req, res) => {
     res.status(500).json({ message: "Failed to delete material." });
   }
 };
+
 exports.getAllMaterials = async (req, res) => {
   try {
     const materials = await Material.findAll({

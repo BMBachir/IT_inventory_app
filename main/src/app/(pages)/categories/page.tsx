@@ -9,6 +9,8 @@ import {
   DialogContent,
   DialogTitle,
   DialogDescription,
+  DialogHeader,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import {
@@ -18,9 +20,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft } from "lucide-react";
+import {
+  ArrowLeft,
+  Edit,
+  Folder,
+  FolderOpen,
+  List,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 
 const API_BASE =
@@ -37,8 +53,8 @@ const createCategorie = async (data: { nom: string }) =>
     body: JSON.stringify(data),
   });
 
-const updateCategorie = async (id: number, data: { nom: string }) =>
-  fetch(`${API_BASE}/api/categories/${id}`, {
+const updateCategorie = async (code: number, data: { nom: string }) =>
+  fetch(`${API_BASE}/api/categories/${code}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -65,6 +81,7 @@ const createSousCategorie = async (data: {
 
 // Types
 export type Categorie = {
+  id: number;
   code: number;
   nom: string;
 };
@@ -88,9 +105,9 @@ export default function CategoriesPage() {
   const [newSousNom, setNewSousNom] = useState("");
   const [selectedCategorieId, setSelectedCategorieId] = useState<string>("");
 
+  const [isSousFormOpen, setIsSousFormOpen] = useState(false);
   const [editingSousCategorie, setEditingSousCategorie] =
     useState<SousCategorie | null>(null);
-  const [isSousFormOpen, setIsSousFormOpen] = useState(false);
 
   const load = async () => {
     setCategories(await fetchCategories());
@@ -104,14 +121,15 @@ export default function CategoriesPage() {
   const handleSave = async () => {
     if (editing) await updateCategorie(editing.code, { nom: newNom });
     else await createCategorie({ nom: newNom });
+
     setOpen(false);
     setNewNom("");
     setEditing(null);
     await load();
   };
 
-  const handleDelete = async (id: number) => {
-    await deleteCategorie(id);
+  const handleDelete = async (code: number) => {
+    await deleteCategorie(code);
     await load();
   };
 
@@ -225,47 +243,101 @@ export default function CategoriesPage() {
           </p>
         </div>
       </div>
-      <Card>
-        <CardHeader className="flex flex-row justify-between items-center">
-          <CardTitle className="text-xl">Categories</CardTitle>
-          <Button onClick={() => setOpen(true)}>+ Add Category</Button>
+      <Card className="border-0 shadow-sm rounded-xl overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <CardTitle className="text-2xl font-bold text-gray-900">
+                Categories
+              </CardTitle>
+              <CardDescription className="text-gray-600 mt-1">
+                {categories.length}{" "}
+                {categories.length === 1 ? "category" : "categories"} available
+              </CardDescription>
+            </div>
+            <Button
+              onClick={() => {
+                setEditing(null);
+                setNewNom("");
+                setOpen(true);
+              }}
+              className="h-10 px-6 shadow-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Category
+            </Button>
+          </div>
         </CardHeader>
-        <Separator />
-        <CardContent className="space-y-4">
+
+        <CardContent className="p-6">
           {categories.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No categories found.
-            </p>
-          ) : (
-            categories.map((cat) => (
-              <div
-                key={cat.code}
-                className="flex justify-between items-center border p-3 rounded-md"
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <FolderOpen className="h-12 w-12 text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No categories found
+              </h3>
+              <p className="text-gray-600 max-w-md">
+                Get started by creating your first category to organize your
+                content
+              </p>
+              <Button
+                onClick={() => setOpen(true)}
+                className="mt-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
               >
-                <span className="font-medium">{cat.nom}</span>
-                <div className="space-x-2">
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setEditing(cat);
-                      setNewNom(cat.nom);
-                      setOpen(true);
-                    }}
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => handleDelete(cat.code)}
-                  >
-                    Delete
-                  </Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Category
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {categories.map((cat) => (
+                <div
+                  key={cat.code}
+                  className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <Folder className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-900">
+                        {cat.nom}
+                      </span>
+                      <p className="text-xs text-gray-500 font-mono mt-1">
+                        Code: {cat.code}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-gray-300 hover:bg-gray-50"
+                      onClick={() => {
+                        setEditing(cat);
+                        setNewNom(cat.nom);
+                        setOpen(true);
+                      }}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDelete(cat.code)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </CardContent>
+
+        {/* Category Form Dialog */}
       </Card>
 
       {/* Dialog for Add/Edit */}
@@ -294,124 +366,212 @@ export default function CategoriesPage() {
       </Dialog>
 
       {/* Sous-Categories Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl">Manage Sous-Categories</CardTitle>
-        </CardHeader>
-        <Separator />
-        <CardContent className="space-y-6">
-          {/* Sous-Category Form */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+      <Card className="border-0 shadow-sm rounded-xl overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-purple-50 to-indigo-50 p-6 border-b border-gray-100">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <Label htmlFor="sous-nom">Sous-Categorie Name</Label>
-              <Input
-                id="sous-nom"
-                value={newSousNom}
-                onChange={(e) => setNewSousNom(e.target.value)}
-                placeholder="Enter sous-categorie name"
-              />
+              <CardTitle className="text-2xl font-bold text-gray-900">
+                Manage Sub-Categories
+              </CardTitle>
+              <CardDescription className="text-gray-600 mt-1">
+                {sousCategories.length}{" "}
+                {sousCategories.length === 1
+                  ? "sub-category"
+                  : "sub-categories"}{" "}
+                available
+              </CardDescription>
             </div>
-            <div>
-              <Label htmlFor="select-categorie">Category</Label>
-              <Select
-                value={selectedCategorieId}
-                onValueChange={(val) => setSelectedCategorieId(val)}
-              >
-                <SelectTrigger id="select-categorie">
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.code} value={String(cat.code)}>
-                      {cat.nom}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Button onClick={handleSousCategorieCreate}>
-              Create Sous-Categorie
-            </Button>
           </div>
+        </CardHeader>
 
-          {/* List of Sous-Categories */}
-          <div className="space-y-2">
-            <h3 className="font-semibold text-md mb-1">
-              Existing Sous-Categories
+        <CardContent className="p-6 space-y-6">
+          {/* Create Sub-Category Form */}
+          <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-xs">
+            <h3 className="font-semibold text-lg text-gray-800 mb-4">
+              Create New Sub-Category
             </h3>
-            {sousCategories.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No sous-categories yet.
-              </p>
-            ) : (
-              sousCategories.map((sousCat) => (
-                <div
-                  key={sousCat.code}
-                  className="flex justify-between items-center"
-                >
-                  <div>
-                    {sousCat.nom} ({sousCat.code})
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => handleEditSousCategorie(sousCat)}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      onClick={() => handleDeleteSousCategorie(sousCat)}
-                    >
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              ))
-            )}
-            <Dialog open={isSousFormOpen} onOpenChange={setIsSousFormOpen}>
-              <DialogContent>
-                <DialogTitle className="text-lg font-semibold mb-2">
-                  {editingSousCategorie ? "Modifier" : "Nouvelle"}{" "}
-                  Sous-Catégorie
-                </DialogTitle>
-                <DialogDescription className="text-sm text-muted-foreground mb-4">
-                  Remplissez les champs ci-dessous pour créer ou modifier une
-                  sous-catégorie.
-                </DialogDescription>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="sous-nom">Name</Label>
                 <Input
+                  id="sous-nom"
                   value={newSousNom}
                   onChange={(e) => setNewSousNom(e.target.value)}
-                  placeholder="Nom de la sous-catégorie"
+                  placeholder="Enter sub-category name"
+                  className="focus:ring-2 focus:ring-purple-500"
                 />
-                <Input
-                  value={newSousCode}
-                  onChange={(e) => setNewSousCode(e.target.value)}
-                  placeholder="Code de la sous-catégorie"
-                />
-
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="select-categorie">Parent Category</Label>
                 <Select
                   value={selectedCategorieId}
-                  onValueChange={setSelectedCategorieId}
+                  onValueChange={(val) => setSelectedCategorieId(val)}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choisir une catégorie" />
+                  <SelectTrigger
+                    id="select-categorie"
+                    className="focus:ring-2 focus:ring-purple-500"
+                  >
+                    <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((cat) => (
                       <SelectItem key={cat.code} value={String(cat.code)}>
-                        {cat.nom}
+                        <div className="flex items-center gap-2">
+                          <Folder className="h-4 w-4 text-purple-600" />
+                          {cat.nom}
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <div className="flex justify-end mt-4">
-                  <Button onClick={handleSousCategorieSave}>Save</Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+              </div>
+              <div className="flex items-end">
+                <Button
+                  onClick={handleSousCategorieCreate}
+                  className="w-full h-10 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Sub-Category
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* List of Sub-Categories */}
+          <div className="space-y-4">
+            <h3 className="font-semibold text-lg text-gray-800 flex items-center gap-2">
+              <List className="h-5 w-5 text-gray-500" />
+              Existing Sub-Categories
+            </h3>
+
+            {sousCategories.length === 0 ? (
+              <div className="bg-gray-50 p-8 rounded-xl border border-dashed border-gray-300 text-center">
+                <FolderOpen className="h-10 w-10 mx-auto text-gray-400 mb-3" />
+                <h4 className="text-gray-600 font-medium">
+                  No sub-categories found
+                </h4>
+                <p className="text-gray-500 text-sm mt-1">
+                  Create your first sub-category to get started
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {sousCategories.map((sousCat) => (
+                  <div
+                    key={sousCat.code}
+                    className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:shadow-xs transition-all"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-purple-100 rounded-lg">
+                        <Folder className="h-5 w-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-900">
+                          {sousCat.nom}
+                        </span>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-gray-500 font-mono">
+                            Code: {sousCat.code}
+                          </span>
+                          <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">
+                            Parent:{" "}
+                            {categories.find(
+                              (c) => c.code === sousCat.categorieId
+                            )?.nom || "Unknown"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-gray-300 hover:bg-gray-50"
+                        onClick={() => handleEditSousCategorie(sousCat)}
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteSousCategorie(sousCat)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </CardContent>
+
+        {/* Edit/Create Dialog */}
+        <Dialog open={isSousFormOpen} onOpenChange={setIsSousFormOpen}>
+          <DialogContent className="sm:max-w-[500px] rounded-xl">
+            <DialogHeader>
+              <DialogTitle className="text-xl">
+                {editingSousCategorie ? "Edit" : "Create New"} Sub-Category
+              </DialogTitle>
+              <DialogDescription>
+                {editingSousCategorie
+                  ? "Update the sub-category details below"
+                  : "Fill out the form to create a new sub-category"}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label>Name</Label>
+                <Input
+                  value={newSousNom}
+                  onChange={(e) => setNewSousNom(e.target.value)}
+                  placeholder="Sub-category name"
+                  className="focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Code</Label>
+                <Input
+                  value={newSousCode}
+                  onChange={(e) => setNewSousCode(e.target.value)}
+                  placeholder="Sub-category code"
+                  className="focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Parent Category</Label>
+                <Select
+                  value={selectedCategorieId}
+                  onValueChange={setSelectedCategorieId}
+                >
+                  <SelectTrigger className="focus:ring-2 focus:ring-purple-500">
+                    <SelectValue placeholder="Select parent category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.code} value={String(cat.code)}>
+                        <div className="flex items-center gap-2">
+                          <Folder className="h-4 w-4 text-purple-600" />
+                          {cat.nom}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                onClick={handleSousCategorieSave}
+                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+              >
+                {editingSousCategorie ? "Save Changes" : "Create Sub-Category"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </Card>
     </div>
   );

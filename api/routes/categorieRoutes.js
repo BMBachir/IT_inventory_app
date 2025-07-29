@@ -4,7 +4,7 @@ const router = express.Router();
 
 router.post("/create", categorieController.createCategorie);
 router.get("/", categorieController.getAllCategories);
-router.put("/:id", categorieController.updateCategorie);
-router.delete("delete/:id", categorieController.deleteCategorie);
+router.put("/:code", categorieController.updateCategorie);
+router.delete("delete/:code", categorieController.deleteCategorie);
 
 module.exports = router;

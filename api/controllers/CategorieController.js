@@ -20,8 +20,8 @@ exports.getAllCategories = async (req, res) => {
 
 exports.updateCategorie = async (req, res) => {
   try {
-    const { id } = req.params;
-    const updated = await Categorie.update(req.body, { where: { id } });
+    const { code } = req.params;
+    const updated = await Categorie.update(req.body, { where: { code } });
     res.status(200).json({ message: "Updated successfully", updated });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -30,8 +30,8 @@ exports.updateCategorie = async (req, res) => {
 
 exports.deleteCategorie = async (req, res) => {
   try {
-    const { id } = req.params;
-    await Categorie.destroy({ where: { id } });
+    const { code } = req.params;
+    await Categorie.destroy({ where: { code } });
     res.status(200).json({ message: "Deleted successfully" });
   } catch (err) {
     res.status(400).json({ error: err.message });
