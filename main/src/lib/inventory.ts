@@ -2,6 +2,7 @@
 
 export interface User {
   id: string;
+  fullname: string;
   employeeId: string;
   name: string;
   email: string;

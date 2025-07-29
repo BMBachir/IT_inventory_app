@@ -18,8 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { type User } from "@/lib/inventory";
 import { toast } from "react-toastify";
@@ -43,6 +41,21 @@ interface SpecificationItem {
   type: "text" | "number";
   placeholder: string;
 }
+type Specifications = {
+  cpu: string;
+  ram: string;
+  disk: string;
+  ncpu: number | null;
+  nram: number | null;
+  ndisk: number | null;
+  ecran: string;
+  adf: number | null;
+  clavier: number | null;
+  souris: number | null;
+  usb: number | null;
+};
+
+type SpecKey = keyof Specifications;
 
 const API_BASE = process.env.NEXT_PUBLIC_API_PORT_URL;
 
@@ -384,70 +397,74 @@ export function AddItemForm() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {specsToDisplay.map((spec) => (
-                  <div key={spec.id} className="space-y-1">
-                    <Label
-                      htmlFor={spec.id}
-                      className="text-sm font-medium text-gray-700"
-                    >
-                      {spec.name}
-                    </Label>
+                {specsToDisplay.map((spec) => {
+                  const specKey = spec.id as keyof Specifications;
 
-                    {spec.id === "adf" ? (
-                      <Select
-                        value={
-                          formData.specifications.adf === null
-                            ? ""
-                            : formData.specifications.adf === 1
-                            ? "yes"
-                            : "no"
-                        }
-                        onValueChange={(value) =>
-                          handleSpecificationChange(
-                            "adf",
-                            value === "yes" ? 1 : 0
-                          )
-                        }
+                  return (
+                    <div key={spec.id} className="space-y-1">
+                      <Label
+                        htmlFor={spec.id}
+                        className="text-sm font-medium text-gray-700"
                       >
-                        <SelectTrigger>
-                          <SelectValue placeholder="ADF disponible ?" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="yes">Yes</SelectItem>
-                          <SelectItem value="no">No</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    ) : spec.type === "text" ? (
-                      <Input
-                        id={spec.id}
-                        value={formData.specifications[spec.id] || ""}
-                        onChange={(e) =>
-                          handleSpecificationChange(spec.id, e.target.value)
-                        }
-                        placeholder={spec.placeholder}
-                      />
-                    ) : (
-                      <Input
-                        id={spec.id}
-                        type="number"
-                        value={
-                          formData.specifications[spec.id] === null
-                            ? ""
-                            : formData.specifications[spec.id]
-                        }
-                        onChange={(e) =>
-                          handleSpecificationChange(
-                            spec.id,
-                            e.target.value === ""
-                              ? null
-                              : Number(e.target.value)
-                          )
-                        }
-                        placeholder={spec.placeholder}
-                      />
-                    )}
-                  </div>
-                ))}
+                        {spec.name}
+                      </Label>
+
+                      {spec.id === "adf" ? (
+                        <Select
+                          value={
+                            formData.specifications.adf === null
+                              ? ""
+                              : formData.specifications.adf === 1
+                              ? "yes"
+                              : "no"
+                          }
+                          onValueChange={(value) =>
+                            handleSpecificationChange(
+                              "adf",
+                              value === "yes" ? 1 : 0
+                            )
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="ADF disponible ?" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="yes">Yes</SelectItem>
+                            <SelectItem value="no">No</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : spec.type === "text" ? (
+                        <Input
+                          id={spec.id}
+                          value={formData.specifications[specKey] || ""}
+                          onChange={(e) =>
+                            handleSpecificationChange(specKey, e.target.value)
+                          }
+                          placeholder={spec.placeholder}
+                        />
+                      ) : (
+                        <Input
+                          id={spec.id}
+                          type="number"
+                          value={
+                            formData.specifications[specKey] === null
+                              ? ""
+                              : formData.specifications[specKey]
+                          }
+                          onChange={(e) =>
+                            handleSpecificationChange(
+                              specKey,
+                              e.target.value === ""
+                                ? null
+                                : Number(e.target.value)
+                            )
+                          }
+                          placeholder={spec.placeholder}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 

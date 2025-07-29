@@ -8,7 +8,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ChevronDown, Search, Plus, Printer } from "lucide-react"; // Added Printer icon
+import {
+  ChevronDown,
+  Search,
+  Plus,
+  Printer,
+  Edit3,
+  Trash2Icon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -28,45 +35,124 @@ import {
 } from "@/components/ui/pagination";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { AddItemForm } from "@/components/add-item-form";
+import EditMaterialDialog from "./EditMaterialDialog";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "./ui/alert-dialog";
 
-// Load JsBarcode library dynamically
-// This is done by directly injecting the script into the new window for printing
-// We don't need to import it here for the main component.
+export type Material = {
+  id: number;
+  codebar: string;
+  marque: string;
+  cpu: string;
+  ram: string;
+  disk: string;
+  Ncpu: number;
+  Nram: number;
+  Ndisk: number;
+  ecran: string;
+  adf: number;
+  clavier: number;
+  souris: number;
+  usb: number;
+  userId: number;
+  sousCategorieId: string;
+  categorieId: number;
+  createdAt: string;
+  updatedAt: string;
+  user?: {
+    fullname?: string;
+    service?: string;
+    bloc?: string;
+  };
+
+  SousCategorie?: {
+    nom: string;
+    categorie?: {
+      nom: string;
+    };
+  };
+};
 
 const API_BASE = process.env.NEXT_PUBLIC_API_PORT_URL;
 
 function RecentItem() {
-  const [mat, setMat] = useState([]);
+  const [mat, setMat] = useState<Material[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedService, setSelectedService] = useState("");
   const [selectedBloc, setSelectedBloc] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const [availableServices, setAvailableServices] = useState([]);
-  const [availableBlocs, setAvailableBlocs] = useState([]);
+  const [availableServices, setAvailableServices] = useState<string[]>([]);
+  const [availableBlocs, setAvailableBlocs] = useState<string[]>([]);
+  const [allUsers, setAllUsers] = useState([]);
+  const [allCategories, setAllCategories] = useState([]);
+  const [allSubcategories, setAllSubcategories] = useState([]);
+
+  const [editOpen, setEditOpen] = useState(false);
+  const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(
+    null
+  );
 
   const itemsPerPage = 10;
   const pageWindowSize = 5;
 
+  const fetchData = async () => {
+    try {
+      const data: Material[] = await fetch(`${API_BASE}/api/materials/`).then(
+        (res) => res.json()
+      );
+      setMat(data);
+
+      setAvailableServices([
+        ...new Set(
+          data.map((item) => item.user?.service).filter(Boolean) as string[]
+        ),
+      ]);
+
+      setAvailableBlocs([
+        ...new Set(
+          data.map((item) => item.user?.bloc).filter(Boolean) as string[]
+        ),
+      ]);
+    } catch (err) {
+      console.error("Impossible de charger les données:", err);
+    }
+  };
+
+  const fetchInitialData = async () => {
+    try {
+      const [usersRes, categoriesRes, subcategoriesRes] = await Promise.all([
+        fetch(`${API_BASE}/api/users/`),
+        fetch(`${API_BASE}/api/categories/`),
+        fetch(`${API_BASE}/api/sous-categories/`), // ✅ this matches your backend
+      ]);
+
+      const users = await usersRes.json();
+      const categories = await categoriesRes.json();
+      const subcategories = await subcategoriesRes.json();
+
+      setAllUsers(users);
+      setAllCategories(categories);
+      setAllSubcategories(subcategories);
+    } catch (error) {
+      console.error("Erreur lors du chargement des données initiales:", error);
+    }
+  };
+
   // Fetch initial data
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = await fetch(`${API_BASE}/api/materials/`).then((res) =>
-          res.json()
-        );
-        setMat(data);
-        setAvailableServices([
-          ...new Set(data.map((item) => item.user?.service).filter(Boolean)),
-        ]);
-        setAvailableBlocs([
-          ...new Set(data.map((item) => item.user?.bloc).filter(Boolean)),
-        ]);
-      } catch (err) {
-        console.error("Impossible de charger les données:", err);
-      }
-    };
     fetchData();
+    fetchInitialData();
   }, []);
 
   // Filtered data based on current selections
@@ -120,7 +206,7 @@ function RecentItem() {
       ...new Set(
         servicesBasedOnOtherFilters
           .map((item) => item.user?.service)
-          .filter(Boolean)
+          .filter((service): service is string => typeof service === "string")
       ),
     ]);
 
@@ -144,7 +230,9 @@ function RecentItem() {
     });
     setAvailableBlocs([
       ...new Set(
-        blocsBasedOnOtherFilters.map((item) => item.user?.bloc).filter(Boolean)
+        blocsBasedOnOtherFilters
+          .map((item) => item.user?.bloc)
+          .filter((bloc): bloc is string => typeof bloc === "string")
       ),
     ]);
   }, [selectedService, selectedBloc, searchTerm, mat]);
@@ -170,8 +258,16 @@ function RecentItem() {
    * @param {string} barcodeValue - The value to encode in the barcode.
    * @param {string} itemName - The name of the item to display on the label.
    */
+<<<<<<< HEAD
   const handlePrintBarcode = (barcodeValue, itemName) => {
     const printWindow = window.open("", "_blank", "width=200,height=150");
+=======
+  const handlePrintBarcode = (barcodeValue: string, itemName: string) => {
+    const barcodeWidth = 531;
+    const barcodeHeight = 413;
+
+    const printWindow = window.open("", "_blank", "width=400,height=300");
+>>>>>>> 8d01b2b2eb82cee8c2bbeefdd5b84c4a66b14007
     if (!printWindow) {
       console.error("Failed to open print window. Please allow pop-ups.");
       return;
@@ -265,6 +361,30 @@ function RecentItem() {
     </html>
   `);
     printWindow.document.close();
+  };
+
+  const handleMaterialUpdated = () => {
+    setEditOpen(false);
+    setSelectedMaterial(null);
+    fetchData(); // or reload();
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/materials/delete/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to delete");
+      }
+
+      toast.success("Matériel supprimé !");
+      fetchData();
+    } catch (error) {
+      console.error("Delete error:", error);
+      toast.error("Erreur lors de la suppression.");
+    }
   };
 
   return (
@@ -393,7 +513,7 @@ function RecentItem() {
                   </Badge>
                 </div>
               </div>
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2">
                 <Badge variant="outline" className="font-mono-custom text-xs">
                   {item.codebar}
                 </Badge>
@@ -407,9 +527,60 @@ function RecentItem() {
                 >
                   <Printer className="h-4 w-4 text-gray-600" />
                 </Button>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  title="Éditer"
+                  className="hover:bg-green-100"
+                  onClick={() => {
+                    setSelectedMaterial(item);
+                    setEditOpen(true);
+                  }}
+                >
+                  <Edit3 className="h-5 w-5 text-green-600" />
+                </Button>
+
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title="Supprimer"
+                      className="hover:bg-red-100"
+                    >
+                      <Trash2Icon className="h-5 w-5 text-red-600" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>
+                        Confirmer la suppression
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Cette action supprimera définitivement ce matériel.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Annuler</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleDelete(item.id)}>
+                        Supprimer
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
           ))}
+          <EditMaterialDialog
+            open={editOpen}
+            onClose={() => setEditOpen(false)}
+            material={selectedMaterial}
+            onUpdated={handleMaterialUpdated}
+            users={allUsers}
+            categories={allCategories}
+            subcategories={allSubcategories}
+          />
 
           {totalPages > 1 && (
             <Pagination>

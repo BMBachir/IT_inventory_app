@@ -16,7 +16,6 @@ exports.createMaterial = async (req, res) => {
         .json({ message: "User or SousCategorie not found." });
     }
 
-    // Generate counter: count how many materials exist with same bloc, service, and sousCategorie
     const materialCount = await Material.count({
       where: {
         userId,
@@ -24,11 +23,10 @@ exports.createMaterial = async (req, res) => {
       },
     });
 
-    const counter = String(materialCount + 1).padStart(2, "0"); // e.g., 01, 02, etc.
+    const counter = String(materialCount + 1).padStart(2, "0");
 
     const codebar = `B${user.bloc}-${user.service}-${sousCategorie.code}-${counter}`;
 
-    // Create material with generated codebar
     const newMaterial = await Material.create({
       ...rest,
       userId,
@@ -67,30 +65,60 @@ exports.createMaterial = async (req, res) => {
 // 🔹 Update Material
 exports.updateMaterial = async (req, res) => {
   try {
-    const { userId, sousCategorieId } = req.body;
+    const { userId, sousCategorieId, ...rest } = req.body;
 
     const material = await Material.findByPk(req.params.id);
     if (!material)
       return res.status(404).json({ message: "Material not found" });
 
-    // Optional: check if user exists
+    let user = null;
     if (userId) {
-      const userExists = await User.findByPk(userId);
-      if (!userExists)
-        return res.status(400).json({ message: "User not found" });
+      user = await User.findByPk(userId);
+      if (!user) return res.status(400).json({ message: "User not found" });
     }
 
-    // Optional: check if sous-categorie exists
+    let sousCategorie = null;
     if (sousCategorieId) {
-      const scExists = await SousCategorie.findOne({
+      sousCategorie = await SousCategorie.findOne({
         where: { code: sousCategorieId },
       });
-      if (!scExists)
+      if (!sousCategorie)
         return res.status(400).json({ message: "Sous-catégorie not found" });
     }
 
-    await material.update(req.body);
-    res.status(200).json(material);
+    // Get original counter from existing codebar
+    let codebar = material.codebar;
+    if (user && sousCategorie && material.codebar) {
+      const parts = material.codebar.split("-");
+      const counter = parts[3];
+
+      codebar = `B${user.bloc}-${user.service}-${sousCategorie.code}-${counter}`;
+    }
+
+    await material.update({ userId, sousCategorieId, codebar, ...rest });
+
+    const updatedMaterial = await Material.findByPk(material.id, {
+      include: [
+        {
+          model: User,
+          attributes: ["id", "fullname", "email", "service", "bloc"],
+        },
+        {
+          model: SousCategorie,
+          as: "SousCategorie",
+          attributes: ["code", "nom"],
+          include: [
+            {
+              model: Categorie,
+              as: "categorie",
+              attributes: ["code", "nom"],
+            },
+          ],
+        },
+      ],
+    });
+
+    res.status(200).json(updatedMaterial);
   } catch (error) {
     console.error("Update error:", error);
     res.status(500).json({ message: "Failed to update material." });
