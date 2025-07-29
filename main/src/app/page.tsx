@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Card,
   CardContent,
@@ -5,91 +7,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+
+import { ChevronDown, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  Plus,
-  Computer,
-  Monitor,
-  Network,
-  Radio,
-  Zap,
-  Camera,
-  Users,
-  UserPlus,
-  Scan,
-  LogIn,
-  Tags,
-} from "lucide-react";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Users, UserPlus, Scan, LogIn, Tags } from "lucide-react";
 import Link from "next/link";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 
 import { AddItemForm } from "@/components/add-item-form";
-const inventoryStats = {
-  totalItems: 1247,
-  totalUsers: 156,
-  categories: 6,
-  locations: 12,
-  pendingMaintenance: 8,
-};
-
-const categoryStats = [
-  {
-    id: 1,
-    name: "Computer",
-    icon: Computer,
-    count: 450,
-    code: "1",
-    color: "bg-blue-500",
-  },
-  {
-    id: 2,
-    name: "Imaging",
-    icon: Camera,
-    count: 120,
-    code: "2",
-    color: "bg-green-500",
-  },
-  {
-    id: 3,
-    name: "Monitoring",
-    icon: Monitor,
-    count: 200,
-    code: "3",
-    color: "bg-purple-500",
-  },
-  {
-    id: 4,
-    name: "Network",
-    icon: Network,
-    count: 180,
-    code: "4",
-    color: "bg-orange-500",
-  },
-  {
-    id: 5,
-    name: "Communication",
-    icon: Radio,
-    count: 95,
-    code: "5",
-    color: "bg-red-500",
-  },
-  {
-    id: 6,
-    name: "Energy",
-    icon: Zap,
-    count: 202,
-    code: "6",
-    color: "bg-yellow-500",
-  },
-];
 
 import RecentItem from "@/components/recent-item";
 import DataDashboard from "@/components/DataDashboard";
@@ -155,38 +85,7 @@ export default function Dashboard() {
         </div>
 
         <DataDashboard />
-
-        {/* Recent Items with User Assignment */}
-        <Card>
-          <CardHeader>
-            <div className="justify-between flex flex-row">
-              <div>
-                <CardTitle className="font-heading">Recent Items</CardTitle>
-                <CardDescription className="font-body">
-                  Latest additions to inventory with user assignments
-                </CardDescription>
-              </div>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="flex items-center gap-2 bg-transparent font-body"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Materials
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[900px] max-h-[100vh] overflow-y-auto">
-                  <AddItemForm />
-                </DialogContent>
-              </Dialog>
-            </div>
-          </CardHeader>
-
-          <CardContent>
-            <RecentItem />
-          </CardContent>
-        </Card>
+        <RecentItem />
       </div>
     </div>
   );

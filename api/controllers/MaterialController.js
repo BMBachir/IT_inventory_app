@@ -26,7 +26,7 @@ exports.createMaterial = async (req, res) => {
 
     const counter = String(materialCount + 1).padStart(2, "0"); // e.g., 01, 02, etc.
 
-    const codebar = `${user.bloc}-${user.service}-${sousCategorie.code}-${counter}`;
+    const codebar = `B${user.bloc}-${user.service}-${sousCategorie.code}-${counter}`;
 
     // Create material with generated codebar
     const newMaterial = await Material.create({
