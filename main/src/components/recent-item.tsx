@@ -171,103 +171,99 @@ function RecentItem() {
    * @param {string} itemName - The name of the item to display on the label.
    */
   const handlePrintBarcode = (barcodeValue, itemName) => {
-    const barcodeWidth = 531;
-    const barcodeHeight = 413;
-
-    const printWindow = window.open("", "_blank", "width=400,height=300");
+    const printWindow = window.open("", "_blank", "width=200,height=150");
     if (!printWindow) {
       console.error("Failed to open print window. Please allow pop-ups.");
       return;
     }
 
     printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Print Barcode</title>
-        <style>
-          @page {
-            size: auto; /* auto is the initial value */
-            margin: 0mm; /* this affects the margin in the printer settings */
-          }
-          body {
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            padding: 10mm; /* Add some padding for visual separation if needed */
-            box-sizing: border-box;
-          }
-          .barcode-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid #ccc; /* Optional: for visual debugging of sticker area */
-            padding: 5px;
-            box-sizing: border-box;
-            width: ${barcodeWidth}px;
-            height: ${barcodeHeight}px;
-            overflow: hidden; /* Ensure barcode doesn't overflow container */
-          }
-          canvas {
-            max-width: 100%;
-            height: auto;
-            display: block; /* Remove extra space below canvas */
-          }
-          .item-name {
-            font-size: 12px;
-            margin-top: 5px;
-            text-align: center;
-            word-break: break-all; /* Break long words */
-          }
-          .barcode-value {
-            font-family: 'monospace';
-                font-size: 20px; 
-                margin-top: 10px;
-                text-align: center;
-                width: 100%; /* Occuper toute la largeur disponible */
-                box-sizing: border-box;
-                padding: 0 2px;
-          }
-        </style>
-        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-      </head>
-      <body>
-        <div class="barcode-container">
-          <canvas id="barcodeCanvas"></canvas>
-          <div class="barcode-value">${barcodeValue}</div>
-        </div>
-        <script>
-          window.onload = function() {
-            try {
-              JsBarcode("#barcodeCanvas", "${barcodeValue}", {
-                format: "CODE128", // Or "EAN13", "UPC", etc. based on your barcode type
-                displayValue: false, // Do not display human-readable text below barcode (we add it separately)
-                width: 2, // Bar width
-                height: 50, // Bar height
-                margin: 0, // No margin around the barcode itself
-                background: "#ffffff", // White background
-                lineColor: "#000000", // Black lines
-              });
-              // Give a small delay for rendering before printing
-              setTimeout(() => {
-                printWindow.print();
-                printWindow.onafterprint = () => printWindow.close();
-              }, 500);
-            } catch (error) {
-              console.error("Error generating barcode:", error);
-              // Display a simple error message in the print window if barcode generation fails
-              printWindow.document.body.innerHTML = '<div style="text-align:center; color: red;">Error generating barcode: ' + error.message + '</div>';
-            }
-          };
-        </script>
-      </body>
-      </html>
-    `);
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Print Barcode</title>
+      <style>
+        @page {
+          size: 4.5cm 3.5cm;
+          margin: 0;
+        }
+        html, body {
+          width: 4.5cm;
+          height: 3.5cm;
+          margin: 0;
+          padding: 0;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          font-family: 'Inter', sans-serif;
+        }
+        .barcode-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          height: 100%;
+          box-sizing: border-box;
+          padding: 0.2cm;
+        }
+        canvas {
+          width: 100%;
+          height: 2.5cm;
+          display: block;
+        }
+        .barcode-value {
+          font-family: monospace;
+          font-size: 10px;
+          text-align: center;
+          margin-top: 0.1cm;
+          word-break: break-word;
+        }
+        .item-name {
+          font-size: 9px;
+          text-align: center;
+          margin-top: 0.1cm;
+          word-break: break-word;
+        }
+      </style>
+      <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    </head>
+    <body>
+      <div class="barcode-container">
+        <canvas id="barcodeCanvas"></canvas>
+        <div class="barcode-value">${barcodeValue}</div>
+     
+      </div>
+    <script>
+  window.onload = function () {
+    try {
+      const canvas = document.getElementById("barcodeCanvas");
+
+      JsBarcode(canvas, "${barcodeValue}", {
+        format: "CODE128",
+        displayValue: false,
+        width: 2.5,
+        height: 50,
+        margin: 0,
+        background: "#ffffff",
+        lineColor: "#000000",
+      });
+
+      // Petite pause pour s'assurer que le rendu est complet
+      setTimeout(() => {
+        window.print();
+        window.onafterprint = () => window.close(); // Fermer la fenêtre automatiquement après l'impression
+      }, 100); // Tu peux ajuster ce délai si nécessaire
+    } catch (error) {
+      document.body.innerHTML =
+        '<div style="text-align:center; color:red;">Erreur génération code-barres : ' + error.message + "</div>";
+    }
+  };
+</script>
+
+    </body>
+    </html>
+  `);
     printWindow.document.close();
   };
 
