@@ -24,6 +24,7 @@ import {
   Building,
   LucideTrash2,
   Trash2,
+  BriefcaseBusiness,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -461,7 +462,7 @@ function RecentItem() {
                     variant="outline"
                     className="flex items-center gap-2 border-gray-300"
                   >
-                    <Building2 className="h-4 w-4 text-gray-600" />
+                    <BriefcaseBusiness className="h-4 w-4 text-gray-600" />
                     <span>{selectedService || "Department"}</span>
                     <ChevronDown className="h-4 w-4 text-gray-500" />
                   </Button>
@@ -489,7 +490,7 @@ function RecentItem() {
                           : ""
                       }
                     >
-                      {service}
+                      <BriefcaseBusiness /> Service {service}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
@@ -527,7 +528,7 @@ function RecentItem() {
                         selectedBloc === bloc ? "bg-gray-100 font-medium" : ""
                       }
                     >
-                      {bloc}
+                      <Building2 /> Block {bloc}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
