@@ -94,7 +94,9 @@ export function ScannerPage() {
     try {
       setLoading(true);
       setError("");
-      const res = await fetch(`${API_BASE}/api/materials/${code}`);
+      const res = await fetch(`${API_BASE}/api/materials/${code}`, {
+        credentials: "include",
+      });
       if (!res.ok) {
         throw new Error("Matériel non trouvé.");
       }

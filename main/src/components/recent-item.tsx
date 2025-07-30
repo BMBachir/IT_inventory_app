@@ -108,9 +108,10 @@ function RecentItem() {
 
   const fetchData = async () => {
     try {
-      const data: Material[] = await fetch(`${API_BASE}/api/materials/`).then(
-        (res) => res.json()
-      );
+      const data: Material[] = await fetch(`${API_BASE}/api/materials/`, {
+        method: "GET",
+        credentials: "include",
+      }).then((res) => res.json());
       setMat(data);
 
       setAvailableServices([
@@ -132,9 +133,18 @@ function RecentItem() {
   const fetchInitialData = async () => {
     try {
       const [usersRes, categoriesRes, subcategoriesRes] = await Promise.all([
-        fetch(`${API_BASE}/api/users/`),
-        fetch(`${API_BASE}/api/categories/`),
-        fetch(`${API_BASE}/api/sous-categories/`), // ✅ this matches your backend
+        fetch(`${API_BASE}/api/users/`, {
+          method: "GET",
+          credentials: "include",
+        }),
+        fetch(`${API_BASE}/api/categories/`, {
+          method: "GET",
+          credentials: "include",
+        }),
+        fetch(`${API_BASE}/api/sous-categories/`, {
+          method: "GET",
+          credentials: "include",
+        }),
       ]);
 
       const users = await usersRes.json();
@@ -365,6 +375,7 @@ function RecentItem() {
     try {
       const res = await fetch(`${API_BASE}/api/materials/delete/${id}`, {
         method: "DELETE",
+        credentials: "include",
       });
 
       if (!res.ok) {

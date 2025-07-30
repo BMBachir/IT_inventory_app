@@ -131,9 +131,18 @@ export function AddItemForm() {
     const fetchData = async () => {
       try {
         const [userRes, catRes, subRes] = await Promise.all([
-          fetch(`${API_BASE}/api/users`).then((res) => res.json()),
-          fetch(`${API_BASE}/api/categories`).then((res) => res.json()),
-          fetch(`${API_BASE}/api/sous-categories`).then((res) => res.json()),
+          fetch(`${API_BASE}/api/users`, {
+            method: "GET",
+            credentials: "include",
+          }).then((res) => res.json()),
+          fetch(`${API_BASE}/api/categories`, {
+            method: "GET",
+            credentials: "include",
+          }).then((res) => res.json()),
+          fetch(`${API_BASE}/api/sous-categories`, {
+            method: "GET",
+            credentials: "include",
+          }).then((res) => res.json()),
         ]);
 
         setUsers(userRes);
@@ -240,6 +249,7 @@ export function AddItemForm() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
+        credentials: "include",
       });
 
       if (!res.ok) throw new Error("Failed to create asset");

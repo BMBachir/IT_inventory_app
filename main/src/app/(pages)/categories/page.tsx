@@ -45,13 +45,17 @@ const API_BASE =
 
 // API Calls
 const fetchCategories = async () =>
-  fetch(`${API_BASE}/api/categories`).then((res) => res.json());
+  fetch(`${API_BASE}/api/categories`, {
+    method: "GET",
+    credentials: "include",
+  }).then((res) => res.json());
 
 const createCategorie = async (data: { nom: string }) =>
   fetch(`${API_BASE}/api/categories/create`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
+    credentials: "include",
   });
 
 const updateCategorie = async (code: number, data: { nom: string }) =>
@@ -59,15 +63,20 @@ const updateCategorie = async (code: number, data: { nom: string }) =>
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
+    credentials: "include",
   });
 
 const deleteCategorie = async (id: number) =>
   fetch(`${API_BASE}/api/categories/delete/${id}`, {
     method: "DELETE",
+    credentials: "include",
   });
 
 const fetchSousCategories = async () =>
-  fetch(`${API_BASE}/api/sous-categories`).then((res) => res.json());
+  fetch(`${API_BASE}/api/sous-categories`, {
+    method: "GET",
+    credentials: "include",
+  }).then((res) => res.json());
 
 const createSousCategorie = async (data: {
   nom: string;
@@ -78,6 +87,7 @@ const createSousCategorie = async (data: {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
+    credentials: "include",
   });
 
 // Types
@@ -159,6 +169,7 @@ export default function CategoriesPage() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
+        credentials: "include",
       }
     );
     return response.json();
@@ -171,6 +182,7 @@ export default function CategoriesPage() {
       `${API_BASE}/api/sous-categories/delete/${code}`,
       {
         method: "DELETE",
+        credentials: "include",
       }
     );
     load();

@@ -6,11 +6,12 @@ const sousCategorieRoutes = require("./routes/sousCategorieRoutes");
 const materialRoutes = require("./routes/materialRoutes");
 const userRoutes = require("./routes/userRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const cookieParser = require("cookie-parser");
 
 require("./models");
 const app = express();
 const port = 5001;
-
+app.use(cookieParser());
 app.use(
   cors({
     origin: "http://localhost:3000",

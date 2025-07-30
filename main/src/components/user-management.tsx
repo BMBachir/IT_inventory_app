@@ -204,7 +204,10 @@ export function UserManagement() {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/users/`);
+      const res = await fetch(`${API_BASE}/api/users/`, {
+        method: "GET",
+        credentials: "include",
+      });
       const data = await res.json();
       setUsers(data);
       setError(null);
@@ -231,6 +234,7 @@ export function UserManagement() {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
+        credentials: "include",
       });
 
       if (!res.ok) throw new Error("Failed to save user");
@@ -274,6 +278,7 @@ export function UserManagement() {
         `${API_BASE}/api/users/delete/${selectedUser.id}`,
         {
           method: "DELETE",
+          credentials: "include",
         }
       );
       if (!res.ok) throw new Error("Failed to delete user");

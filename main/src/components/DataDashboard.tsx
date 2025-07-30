@@ -26,7 +26,8 @@ function DataDashboard() {
     const fetchData = async () => {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_PORT_URL}/api/dashboard/`
+          `${process.env.NEXT_PUBLIC_API_PORT_URL}/api/dashboard/`,
+          { credentials: "include" }
         );
         const data = await res.json();
         console.log("data", data);
