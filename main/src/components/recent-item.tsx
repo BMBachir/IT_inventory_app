@@ -48,6 +48,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "./ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export type Material = {
   id: number;
@@ -74,7 +75,6 @@ export type Material = {
     service?: string;
     bloc?: string;
   };
-
   SousCategorie?: {
     nom: string;
     categorie?: {
@@ -101,6 +101,10 @@ function RecentItem() {
   const [editOpen, setEditOpen] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(
     null
+  );
+
+  const [selectedItemIds, setSelectedItemIds] = useState<Set<number>>(
+    new Set()
   );
 
   const itemsPerPage = 10;
@@ -134,7 +138,7 @@ function RecentItem() {
       const [usersRes, categoriesRes, subcategoriesRes] = await Promise.all([
         fetch(`${API_BASE}/api/users/`),
         fetch(`${API_BASE}/api/categories/`),
-        fetch(`${API_BASE}/api/sous-categories/`), // ✅ this matches your backend
+        fetch(`${API_BASE}/api/sous-categories/`),
       ]);
 
       const users = await usersRes.json();
@@ -149,13 +153,11 @@ function RecentItem() {
     }
   };
 
-  // Fetch initial data
   useEffect(() => {
     fetchData();
     fetchInitialData();
   }, []);
 
-  // Filtered data based on current selections
   const filteredData = mat.filter((item) => {
     const matchService =
       selectedService === "" || selectedService === null
@@ -173,7 +175,13 @@ function RecentItem() {
           item.codebar +
           item.user?.fullname +
           item.user?.service +
-          item.user?.bloc
+          item.user?.bloc +
+          item.cpu +
+          item.ram +
+          item.disk +
+          item.ecran +
+          (item.SousCategorie?.categorie?.nom || "") +
+          (item.SousCategorie?.nom || "")
         )
           .toLowerCase()
           .includes(searchTerm.toLowerCase())
@@ -182,7 +190,10 @@ function RecentItem() {
     return matchService && matchBloc && matchSearch;
   });
 
-  // Effect to update available service and bloc options
+  useEffect(() => {
+    setSelectedItemIds(new Set());
+  }, [selectedService, selectedBloc, searchTerm]);
+
   useEffect(() => {
     const servicesBasedOnOtherFilters = mat.filter((item) => {
       const matchBloc =
@@ -195,7 +206,13 @@ function RecentItem() {
             item.codebar +
             item.user?.fullname +
             item.user?.service +
-            item.user?.bloc
+            item.user?.bloc +
+            item.cpu +
+            item.ram +
+            item.disk +
+            item.ecran +
+            (item.SousCategorie?.categorie?.nom || "") +
+            (item.SousCategorie?.nom || "")
           )
             .toLowerCase()
             .includes(searchTerm.toLowerCase())
@@ -221,7 +238,13 @@ function RecentItem() {
             item.codebar +
             item.user?.fullname +
             item.user?.service +
-            item.user?.bloc
+            item.user?.bloc +
+            item.cpu +
+            item.ram +
+            item.disk +
+            item.ecran +
+            (item.SousCategorie?.categorie?.nom || "") +
+            (item.SousCategorie?.nom || "")
           )
             .toLowerCase()
             .includes(searchTerm.toLowerCase())
@@ -252,121 +275,191 @@ function RecentItem() {
     }
   };
 
-  /**
-   * Handles printing a barcode for a given value.
-   * It opens a new window, generates the barcode on a canvas, and triggers the print dialog.
-   * @param {string} barcodeValue - The value to encode in the barcode.
-   * @param {string} itemName - The name of the item to display on the label.
-   */
-<<<<<<< HEAD
-  const handlePrintBarcode = (barcodeValue, itemName) => {
-    const printWindow = window.open("", "_blank", "width=200,height=150");
-=======
-  const handlePrintBarcode = (barcodeValue: string, itemName: string) => {
-    const barcodeWidth = 531;
-    const barcodeHeight = 413;
+  const handleSelectItem = (id: number, isChecked: boolean) => {
+    const newSet = new Set(selectedItemIds);
+    if (isChecked) {
+      newSet.add(id);
+    } else {
+      newSet.delete(id);
+    }
+    setSelectedItemIds(newSet);
+  };
 
-    const printWindow = window.open("", "_blank", "width=400,height=300");
->>>>>>> 8d01b2b2eb82cee8c2bbeefdd5b84c4a66b14007
+  const handleSelectAll = (isChecked: boolean) => {
+    const newSet = new Set(selectedItemIds);
+    if (isChecked) {
+      currentData.forEach((item) => newSet.add(item.id));
+    } else {
+      currentData.forEach((item) => newSet.delete(item.id));
+    }
+    setSelectedItemIds(newSet);
+  };
+
+  const generateBarcodeHtmlSnippet = (
+    barcodeValue: string,
+    itemName: string,
+    isFirst: boolean
+  ) => {
+    const pageBreakClass = isFirst ? "" : "page-break-new-label";
+    return `
+      <div class="barcode-container ${pageBreakClass}">
+        <canvas id="barcodeCanvas-${barcodeValue}"></canvas>
+        <div class="barcode-value">${barcodeValue}</div>
+      </div>
+    `;
+  };
+
+  // La fonction handlePrintBarcode n'est plus appelée par le composant, mais elle reste définie au cas où.
+  const handlePrintBarcode = (barcodeValue: string, itemName: string) => {
+    const printWindow = window.open("", "_blank", "width=200,height=150");
     if (!printWindow) {
       console.error("Failed to open print window. Please allow pop-ups.");
       return;
     }
 
+    const barcodeHtml = generateBarcodeHtmlSnippet(
+      barcodeValue,
+      itemName,
+      true
+    );
+
     printWindow.document.write(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>Print Barcode</title>
-      <style>
-        @page {
-          size: 4.5cm 3.5cm;
-          margin: 0;
-        }
-        html, body {
-          width: 4.5cm;
-          height: 3.5cm;
-          margin: 0;
-          padding: 0;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          font-family: 'Inter', sans-serif;
-        }
-        .barcode-container {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          width: 100%;
-          height: 100%;
-          box-sizing: border-box;
-          padding: 0.2cm;
-        }
-        canvas {
-          width: 100%;
-          height: 2.5cm;
-          display: block;
-        }
-        .barcode-value {
-          font-family: monospace;
-          font-size: 10px;
-          text-align: center;
-          margin-top: 0.1cm;
-          word-break: break-word;
-        }
-        .item-name {
-          font-size: 9px;
-          text-align: center;
-          margin-top: 0.1cm;
-          word-break: break-word;
-        }
-      </style>
-      <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-    </head>
-    <body>
-      <div class="barcode-container">
-        <canvas id="barcodeCanvas"></canvas>
-        <div class="barcode-value">${barcodeValue}</div>
-     
-      </div>
-    <script>
-  window.onload = function () {
-    try {
-      const canvas = document.getElementById("barcodeCanvas");
-
-      JsBarcode(canvas, "${barcodeValue}", {
-        format: "CODE128",
-        displayValue: false,
-        width: 2.5,
-        height: 50,
-        margin: 0,
-        background: "#ffffff",
-        lineColor: "#000000",
-      });
-
-      // Petite pause pour s'assurer que le rendu est complet
-      setTimeout(() => {
-        window.print();
-        window.onafterprint = () => window.close(); // Fermer la fenêtre automatiquement après l'impression
-      }, 100); // Tu peux ajuster ce délai si nécessaire
-    } catch (error) {
-      document.body.innerHTML =
-        '<div style="text-align:center; color:red;">Erreur génération code-barres : ' + error.message + "</div>";
-    }
-  };
-</script>
-
-    </body>
-    </html>
-  `);
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Print Barcode</title>
+        <style>
+          @page { size: 4.5cm 3.5cm; margin: 0; }
+          html, body { width: 4.5cm; height: 3.5cm; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; font-family: 'Inter', sans-serif; }
+          .barcode-container { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; box-sizing: border-box; padding: 0.2cm; }
+          canvas { width: 100%; height: 2.5cm; display: block; }
+          .barcode-value { font-family: monospace; font-size: 10px; text-align: center; margin-top: 0.1cm; word-break: break-word; }
+          .item-name { font-size: 9px; text-align: center; margin-top: 0.1cm; word-break: break-word; }
+        </style>
+        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+      </head>
+      <body>
+        ${barcodeHtml}
+        <script>
+          const canvas = document.getElementById("barcodeCanvas-${barcodeValue}");
+          if (canvas) {
+            JsBarcode(canvas, "${barcodeValue}", {
+              format: "CODE128",
+              displayValue: false,
+              width: 2.5,
+              height: 50,
+              margin: 0,
+              background: "#ffffff",
+              lineColor: "#000000",
+            });
+          }
+          setTimeout(() => {
+            window.print();
+            window.onafterprint = () => window.close();
+          }, 100);
+        </script>
+      </body>
+      </html>
+    `);
     printWindow.document.close();
+  };
+
+  const handlePrintSelected = () => {
+    if (selectedItemIds.size === 0) {
+      toast.info("Veuillez sélectionner au moins un élément à imprimer.");
+      return;
+    }
+
+    const selectedItems = mat.filter((item) => selectedItemIds.has(item.id));
+    let allBarcodesHtml = "";
+
+    selectedItems.forEach((item, index) => {
+      allBarcodesHtml += generateBarcodeHtmlSnippet(
+        item.codebar,
+        item.marque,
+        index === 0
+      );
+    });
+
+    const printWindow = window.open("", "_blank", "width=800,height=600");
+    if (!printWindow) {
+      console.error("Failed to open print window. Please allow pop-ups.");
+      toast.error("Veuillez autoriser les pop-ups pour imprimer.");
+      return;
+    }
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Print Barcodes</title>
+        <style>
+          @page {
+            size: 4.5cm 3.5cm;
+            margin: 0;
+          }
+          body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+          }
+          .barcode-container {
+            width: 4.5cm;
+            height: 3.5cm;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            padding: 0.2cm;
+            page-break-inside: avoid;
+          }
+          .page-break-new-label {
+            page-break-before: always;
+          }
+          canvas { width: 100%; height: 2.5cm; display: block; }
+          .barcode-value { font-family: monospace; font-size: 10px; text-align: center; margin-top: 0.1cm; word-break: break-word; }
+          .item-name { font-size: 9px; text-align: center; margin-top: 0.1cm; word-break: break-word; }
+        </style>
+        <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+      </head>
+      <body>
+        ${allBarcodesHtml}
+        <script>
+          document.addEventListener('DOMContentLoaded', () => {
+            const barcodes = document.querySelectorAll('canvas');
+            barcodes.forEach(canvas => {
+              // CORRECTION: Extraction correcte de la valeur du code-barres de l'ID du canvas
+              const id = canvas.id;
+              const barcodeValue = id.replace('barcodeCanvas-', '');
+              console.log("barcode:", barcodeValue);
+              JsBarcode(canvas, barcodeValue, {
+                format: "CODE128",
+                displayValue: false,
+                width: 2.5,
+                height: 50,
+                margin: 0,
+                background: "#ffffff",
+                lineColor: "#000000",
+              });
+            });
+            setTimeout(() => {
+              window.print();
+              window.onafterprint = () => window.close();
+            }, 500);
+          });
+        </script>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+    setSelectedItemIds(new Set());
   };
 
   const handleMaterialUpdated = () => {
     setEditOpen(false);
     setSelectedMaterial(null);
-    fetchData(); // or reload();
+    fetchData();
   };
 
   const handleDelete = async (id: number) => {
@@ -400,7 +493,7 @@ function RecentItem() {
 
           <div className="relative max-w-sm w-full">
             <Input
-              placeholder="Filter by marque, user, service..."
+              placeholder="Filter by marque, user, service, CPU, RAM, disk, screen, category, subcategory..."
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -421,7 +514,7 @@ function RecentItem() {
               <div
                 onClick={() => {
                   setSelectedService("");
-                  setCurrentPage(1); // Reset page on filter change
+                  setCurrentPage(1);
                 }}
                 className="px-4 py-1 hover:bg-gray-100 cursor-pointer font-semibold text-blue-600"
               >
@@ -432,7 +525,7 @@ function RecentItem() {
                   key={index}
                   onClick={() => {
                     setSelectedService(service);
-                    setCurrentPage(1); // Reset page on filter change
+                    setCurrentPage(1);
                   }}
                   className={`px-4 py-1 hover:bg-gray-100 cursor-pointer ${
                     selectedService === service ? "bg-gray-200 font-bold" : ""
@@ -454,7 +547,7 @@ function RecentItem() {
               <div
                 onClick={() => {
                   setSelectedBloc("");
-                  setCurrentPage(1); // Reset page on filter change
+                  setCurrentPage(1);
                 }}
                 className="px-4 py-1 hover:bg-gray-100 cursor-pointer font-semibold text-blue-600"
               >
@@ -465,7 +558,7 @@ function RecentItem() {
                   key={index}
                   onClick={() => {
                     setSelectedBloc(bloc);
-                    setCurrentPage(1); // Reset page on filter change
+                    setCurrentPage(1);
                   }}
                   className={`px-4 py-1 hover:bg-gray-100 cursor-pointer ${
                     selectedBloc === bloc ? "bg-gray-200 font-bold" : ""
@@ -488,17 +581,52 @@ function RecentItem() {
               <AddItemForm />
             </DialogContent>
           </Dialog>
+
+          <Button
+            variant="outline"
+            className="flex items-center gap-2"
+            onClick={handlePrintSelected}
+            disabled={selectedItemIds.size === 0}
+            title="Imprimer les éléments sélectionnés"
+          >
+            <Printer className="h-4 w-4" />
+            Imprimer la sélection ({selectedItemIds.size})
+          </Button>
         </div>
       </CardHeader>
 
       <CardContent>
         <div className="space-y-3">
-          {currentData.map((item, index) => (
+          <div className="flex items-center justify-between p-4 bg-gray-100 rounded-lg">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                checked={
+                  currentData.length > 0 &&
+                  selectedItemIds.size === currentData.length
+                }
+                onCheckedChange={(isChecked) =>
+                  handleSelectAll(isChecked as boolean)
+                }
+                aria-label="Sélectionner tout"
+              />
+              <span className="font-semibold text-gray-700">
+                Sélectionner la page actuelle
+              </span>
+            </div>
+          </div>
+          {currentData.map((item) => (
             <div
-              key={index}
+              key={item.id}
               className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
             >
-              <div className="flex-1">
+              <Checkbox
+                checked={selectedItemIds.has(item.id)}
+                onCheckedChange={(isChecked) =>
+                  handleSelectItem(item.id, isChecked as boolean)
+                }
+                aria-label={`Sélectionner ${item.marque}`}
+              />
+              <div className="flex-1 ml-4">
                 <div className="font-medium font-heading">{item.marque}</div>
                 <div className="text-sm text-gray-600 font-body">
                   {item.SousCategorie?.categorie?.nom} &gt;{" "}
@@ -517,8 +645,8 @@ function RecentItem() {
                 <Badge variant="outline" className="font-mono-custom text-xs">
                   {item.codebar}
                 </Badge>
-                {/* Print Barcode Button */}
-                <Button
+                {/* Bouton d'impression individuelle supprimé ici */}
+                {/* <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => handlePrintBarcode(item.codebar, item.marque)}
@@ -526,7 +654,7 @@ function RecentItem() {
                   className="hover:bg-gray-200"
                 >
                   <Printer className="h-4 w-4 text-gray-600" />
-                </Button>
+                </Button> */}
 
                 <Button
                   variant="ghost"
