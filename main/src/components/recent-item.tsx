@@ -15,11 +15,21 @@ import {
   Printer,
   Edit3,
   Trash2Icon,
+  MapPin,
+  Building2,
+  Clock,
+  Package,
+  ChevronRight,
+  User,
+  Building,
+  LucideTrash2,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -33,7 +43,14 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { AddItemForm } from "@/components/add-item-form";
 import EditMaterialDialog from "./EditMaterialDialog";
 import { toast } from "sonner";
@@ -49,6 +66,7 @@ import {
   AlertDialogTrigger,
 } from "./ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export type Material = {
   id: number;
@@ -112,9 +130,10 @@ function RecentItem() {
 
   const fetchData = async () => {
     try {
-      const data: Material[] = await fetch(`${API_BASE}/api/materials/`).then(
-        (res) => res.json()
-      );
+      const data: Material[] = await fetch(`${API_BASE}/api/materials/`, {
+        method: "GET",
+        credentials: "include",
+      }).then((res) => res.json());
       setMat(data);
 
       setAvailableServices([
@@ -466,6 +485,7 @@ function RecentItem() {
     try {
       const res = await fetch(`${API_BASE}/api/materials/delete/${id}`, {
         method: "DELETE",
+        credentials: "include",
       });
 
       if (!res.ok) {
@@ -482,13 +502,31 @@ function RecentItem() {
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex flex-wrap items-center gap-4 justify-between">
-          <div>
-            <CardTitle className="font-heading">Recent Items</CardTitle>
-            <CardDescription className="font-body">
-              Latest additions to inventory with user assignments
-            </CardDescription>
+      <CardHeader className="bg-gradient-to-r from-gray-50 to-white p-6 border-b border-gray-200">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          {/* Title Section */}
+          <div className="relative">
+            {/* Decorative accent bar */}
+            <div className="absolute -left-6 top-1/2 transform -translate-y-1/2 w-1.5 h-12 bg-blue-600 rounded-full"></div>
+
+            <div className="space-y-1">
+              <div className="flex items-center gap-3">
+                {/* Icon container with subtle shadow */}
+                <div className="p-2.5 bg-blue-100 rounded-xl shadow-inner">
+                  <Clock className="h-5 w-5 text-blue-600" />
+                </div>
+
+                {/* Gradient text title */}
+                <CardTitle className="text-2xl font-bold bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 text-transparent">
+                  Recent Items
+                </CardTitle>
+              </div>
+
+              {/* Description with subtle animation */}
+              <CardDescription className="text-gray-600 pl-11 transition-all duration-300 hover:text-gray-800">
+                Latest additions to inventory with user assignments
+              </CardDescription>
+            </div>
           </div>
 
           <div className="relative max-w-sm w-full">
@@ -632,17 +670,27 @@ function RecentItem() {
                   {item.SousCategorie?.categorie?.nom} &gt;{" "}
                   {item.SousCategorie?.nom}
                 </div>
-                <div className="flex items-center gap-2 mt-1">
-                  <Badge variant="outline" className="text-xs font-body">
-                    👤 {item.user?.fullname}
-                  </Badge>
-                  <Badge variant="outline" className="text-xs font-body">
-                    🏢 {item.user?.service}
-                  </Badge>
+
+                {/* User Badges */}
+                <div className="flex flex-wrap gap-2 pl-11">
+                  {item.user?.fullname && (
+                    <Badge variant="outline" className="text-xs bg-gray-50">
+                      <User className="h-3 w-3 mr-1 text-gray-600" />
+                      {item.user.fullname}
+                    </Badge>
+                  )}
+                  {item.user?.service && (
+                    <Badge variant="outline" className="text-xs bg-gray-50">
+                      <Building className="h-3 w-3 mr-1 text-gray-600" />
+                      {item.user.service}
+                    </Badge>
+                  )}
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <Badge variant="outline" className="font-mono-custom text-xs">
+
+              {/* Actions */}
+              <div className="flex items-center gap-2 mt-3 sm:mt-0">
+                <Badge variant="secondary" className="font-mono text-xs">
                   {item.codebar}
                 </Badge>
                 {/* Bouton d'impression individuelle supprimé ici */}
@@ -656,30 +704,55 @@ function RecentItem() {
                   <Printer className="h-4 w-4 text-gray-600" />
                 </Button> */}
 
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  title="Éditer"
-                  className="hover:bg-green-100"
-                  onClick={() => {
-                    setSelectedMaterial(item);
-                    setEditOpen(true);
-                  }}
-                >
-                  <Edit3 className="h-5 w-5 text-green-600" />
-                </Button>
-
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
+                <Tooltip>
+                  <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
-                      title="Supprimer"
-                      className="hover:bg-red-100"
+                      onClick={() =>
+                        handlePrintBarcode(item.codebar, item.marque)
+                      }
+                      className="hover:bg-blue-50"
                     >
-                      <Trash2Icon className="h-5 w-5 text-red-600" />
+                      <Printer className="h-4 w-4 text-blue-600" />
                     </Button>
-                  </AlertDialogTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>Print Barcode</TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setSelectedMaterial(item);
+                        setEditOpen(true);
+                      }}
+                      className="hover:bg-green-50"
+                    >
+                      <Edit3 className="h-4 w-4 text-green-600" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Edit Item</TooltipContent>
+                </Tooltip>
+
+                <AlertDialog>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-600" />
+                        </Button>
+                      </AlertDialogTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent>Delete Item</TooltipContent>
+                  </Tooltip>
+
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>
@@ -700,6 +773,8 @@ function RecentItem() {
               </div>
             </div>
           ))}
+
+          {/* Edit Dialog */}
           <EditMaterialDialog
             open={editOpen}
             onClose={() => setEditOpen(false)}
@@ -710,54 +785,67 @@ function RecentItem() {
             subcategories={allSubcategories}
           />
 
+          {/* Pagination */}
           {totalPages > 1 && (
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePageChange(currentPage - 1);
-                    }}
-                  />
-                </PaginationItem>
-
-                {Array.from({ length: endPage - startPage + 1 }, (_, i) => {
-                  const page = startPage + i;
-                  return (
-                    <PaginationItem key={page}>
-                      <PaginationLink
-                        href="#"
-                        isActive={page === currentPage}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handlePageChange(page);
-                        }}
-                      >
-                        {page}
-                      </PaginationLink>
-                    </PaginationItem>
-                  );
-                })}
-
-                {endPage < totalPages && (
+            <div className="pt-4">
+              <Pagination>
+                <PaginationContent>
                   <PaginationItem>
-                    <PaginationEllipsis />
+                    <PaginationPrevious
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handlePageChange(currentPage - 1);
+                      }}
+                      className={
+                        currentPage === 1
+                          ? "pointer-events-none opacity-50"
+                          : ""
+                      }
+                    />
                   </PaginationItem>
-                )}
 
-                <PaginationItem>
-                  <PaginationNext
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePageChange(currentPage + 1);
-                    }}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+                  {Array.from({ length: endPage - startPage + 1 }, (_, i) => {
+                    const page = startPage + i;
+                    return (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          href="#"
+                          isActive={page === currentPage}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handlePageChange(page);
+                          }}
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  })}
+
+                  {endPage < totalPages && (
+                    <PaginationItem>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  )}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handlePageChange(currentPage + 1);
+                      }}
+                      className={
+                        currentPage === totalPages
+                          ? "pointer-events-none opacity-50"
+                          : ""
+                      }
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
           )}
         </div>
       </CardContent>
