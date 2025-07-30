@@ -16,8 +16,28 @@ import Link from "next/link";
 import RecentItem from "@/components/recent-item";
 import DataDashboard from "@/components/DataDashboard";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { useRouter } from "next/navigation";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_PORT_URL;
 
 export default function Dashboard() {
+  const router = useRouter();
+  const handleLogout = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/logout`, {
+        method: "GET",
+        credentials: "include",
+      });
+      localStorage.removeItem("user");
+      if (res.ok) {
+        router.push("/login");
+      } else {
+        console.error("Logout failed");
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50 p-6">
@@ -85,12 +105,13 @@ export default function Dashboard() {
                     <span className="text-gray-700">Add User</span>
                   </Button>
                 </Link>
-                <Link href="/login">
-                  <Button className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-sm backdrop-blur-sm">
-                    <LogOut className="h-4 w-4" />
-                    <span>Logout</span>
-                  </Button>
-                </Link>
+                <Button
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-sm backdrop-blur-sm"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Logout</span>
+                </Button>
               </div>
             </div>
           </div>

@@ -53,7 +53,7 @@ const Page = () => {
         <TabsTrigger value="login" className="text-2xl px-12 py-5">
           Se connecter
         </TabsTrigger>
-        <TabsTrigger value="register" className="text-2xl px-10 py-5">
+        <TabsTrigger value="register" className="text-2xl px-10  py-5">
           S&apos;inscrire
         </TabsTrigger>
       </TabsList>
@@ -105,7 +105,7 @@ const Page = () => {
         <Card className="h-auto w-full mt-6 p-6">
           <div>
             <div className="flex justify-center items-center transition-all duration-500 mt-10 mb-10 ">
-              <p className="text-lg flex flex-col items-center justify-center text-center gap-4 text-gray-700 bg-gray-200 border-2 border-dotted border-gray-400 hover:text-[#0085CC] hover:border-[#0085CC] cursor-pointer p-4 rounded-2xl transition-all duration-500">
+              <p className="text-lg flex flex-col items-center justify-center text-center gap-4 text-red-700 bg-red-50 border-2 border-dotted border-red-200 hover:text-red-600 hover:border-red-600 cursor-pointer p-4 rounded-2xl transition-all duration-500">
                 Seuls les administrateurs peuvent créer de nouveaux utilisateurs
                 <ShieldAlert size={43} />
               </p>

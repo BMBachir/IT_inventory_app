@@ -18,7 +18,7 @@ router.post(
 
   authController.loginUser
 );
-router.get("/logout", authenticateUser, authorizeAdmin, authController.signOut);
+router.get("/logout", authController.signOut);
 router.delete(
   "/delete-user/:id",
   authenticateUser,
