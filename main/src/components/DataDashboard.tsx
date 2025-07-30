@@ -14,6 +14,7 @@ import {
   Compass,
   FolderOpen,
   FolderTree,
+  Link2,
   MapPin,
   Monitor,
   Package,
@@ -24,15 +25,37 @@ import {
 import Link from "next/link";
 import { Button } from "./ui/button";
 
+type InventoryStats = {
+  totalItems: number;
+  totalUsers: number;
+  categories: number;
+  locations: number;
+  activeUsers: number;
+  topCategories: string[];
+  primaryLocation: string;
+};
+type CategoryStat = {
+  id: number | string;
+  name: string;
+  code: string;
+  color: string; // e.g., "bg-blue-500"
+  icon: React.ElementType; // this is key for dynamic icon components
+  subCategories: string[];
+  count: number;
+};
+
 function DataDashboard() {
-  const [inventoryStats, setInventoryStats] = useState({
+  const [inventoryStats, setInventoryStats] = useState<InventoryStats>({
     totalItems: 0,
     totalUsers: 0,
     categories: 0,
     locations: 0,
+    activeUsers: 0,
+    topCategories: [],
+    primaryLocation: "N/A",
   });
 
-  const [categoryStats, setCategoryStats] = useState([]);
+  const [categoryStats, setCategoryStats] = useState<CategoryStat[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -43,20 +66,25 @@ function DataDashboard() {
         );
         const data = await res.json();
         console.log("data", data);
-        const mappedCategories = data.categoryMaterialCounts.map((cat) => ({
-          id: cat.categoryId,
-          name: cat.categoryName,
-          code: `${cat.categoryId}`,
-          count: cat.materialsCount,
-          icon: Monitor,
-          color: "bg-blue-500",
-        }));
+        const mappedCategories = data.categoryMaterialCounts.map(
+          (cat: any) => ({
+            id: cat.categoryId,
+            name: cat.categoryName,
+            code: `${cat.categoryId}`,
+            count: cat.materialsCount,
+            icon: Monitor,
+            color: "bg-blue-500",
+          })
+        );
 
         setInventoryStats({
           totalItems: data.totalMaterials,
           totalUsers: data.totalUsers,
           categories: data.totalCategories,
-          locations: 0,
+          locations: data.totalLocations || 0,
+          activeUsers: data.activeUsers || 0,
+          topCategories: data.topCategories || [],
+          primaryLocation: data.primaryLocation || "N/A",
         });
 
         setCategoryStats(mappedCategories);
@@ -222,9 +250,8 @@ function DataDashboard() {
               <Button
                 variant="outline"
                 className="border-gray-300 hover:bg-gray-50 shadow-xs"
-                onClick={() => setShowCategoryForm(true)}
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <Link2 className="h-4 w-4 mr-2" />
                 Add Category
               </Button>
             </Link>
@@ -241,13 +268,15 @@ function DataDashboard() {
               <p className="text-gray-600 max-w-md">
                 Create your first category to organize your IT assets
               </p>
-              <Button
-                onClick={() => setShowCategoryForm(true)}
-                className="mt-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create Category
-              </Button>
+              <Link href={"/categories"}>
+                <Button
+                  variant="outline"
+                  className="border-gray-300 hover:bg-gray-50 shadow-xs"
+                >
+                  <Link2 className="h-4 w-4 mr-2" />
+                  Create Category
+                </Button>
+              </Link>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
