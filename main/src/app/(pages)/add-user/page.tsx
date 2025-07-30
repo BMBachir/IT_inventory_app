@@ -26,6 +26,7 @@ import { Label } from "@/components/ui/label";
 
 import { toast } from "react-toastify";
 import { useAuth } from "@/app/Context/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 // Mock user data
 
@@ -111,272 +112,279 @@ export default function Page() {
       toast.error("Error Supprimant le utilisateur!");
     }
   };
-  console.log(user);
-  return (
-    <div className="container mx-auto py-6 space-y-6">
-      {user?.userData.role === "admin" ? (
-        <div className="container mx-auto py-6 space-y-6">
-          {" "}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">
-                IT User Management
-              </h1>
-              <p className="text-muted-foreground">
-                Manage your users, their roles and permissions.
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm">
-                <Download className="mr-2 h-4 w-4" />
-                Export
-              </Button>
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button size="sm">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Ajouter un utilisateur
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Ajouter un nouvel utilisateur</DialogTitle>
-                    <DialogDescription>
-                      Créez un nouveau compte utilisateur avec les détails
-                      ci-dessous.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="username">Nom d&apos;utilisateur</Label>
-                      <Input
-                        id="username"
-                        type="text"
-                        onChange={handleOnChange}
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        onChange={handleOnChange}
-                      />
-                    </div>
 
-                    <div className="grid gap-2">
-                      <Label htmlFor="password">Mot de passe</Label>
-                      <Input
-                        id="password"
-                        type="password"
-                        onChange={handleOnChange}
-                      />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button onClick={handleCreateUser}>
-                      Créer un utilisateur
+  return (
+    <ProtectedRoute>
+      <div className="container mx-auto py-6 space-y-6">
+        {user?.userData.role === "admin" ? (
+          <div className="container mx-auto py-6 space-y-6">
+            {" "}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight">
+                  IT User Management
+                </h1>
+                <p className="text-muted-foreground">
+                  Manage your users, their roles and permissions.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm">
+                  <Download className="mr-2 h-4 w-4" />
+                  Export
+                </Button>
+                <Dialog
+                  open={isAddDialogOpen}
+                  onOpenChange={setIsAddDialogOpen}
+                >
+                  <DialogTrigger asChild>
+                    <Button size="sm">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Ajouter un utilisateur
                     </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </div>
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Search users..."
-                  className="pl-8"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Ajouter un nouvel utilisateur</DialogTitle>
+                      <DialogDescription>
+                        Créez un nouveau compte utilisateur avec les détails
+                        ci-dessous.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="username">Nom d&apos;utilisateur</Label>
+                        <Input
+                          id="username"
+                          type="text"
+                          onChange={handleOnChange}
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          onChange={handleOnChange}
+                        />
+                      </div>
+
+                      <div className="grid gap-2">
+                        <Label htmlFor="password">Mot de passe</Label>
+                        <Input
+                          id="password"
+                          type="password"
+                          onChange={handleOnChange}
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button onClick={handleCreateUser}>
+                        Créer un utilisateur
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
-            <Select value={selectedRole} onValueChange={setSelectedRole}>
-              <SelectTrigger className="w-full md:w-[180px]">
-                <SelectValue placeholder="Filter by role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Roles</SelectItem>
-                <SelectItem value="Admin">Admin</SelectItem>
-                <SelectItem value="User">User</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="w-full overflow-x-auto rounded-lg border border-gray-300 shadow-md">
-            <table className="w-full border-collapse">
-              {/* Table Head */}
-              <thead className="bg-gray-100 text-gray-700">
-                <tr>
-                  <th className="p-3 text-left">Name</th>
-                  <th className="p-3 text-left">Email</th>
-                  <th className="p-3 text-left hidden md:table-cell">Role</th>
-                  <th className="p-3 text-center">Actions</th>
-                </tr>
-              </thead>
-
-              {/* Table Body */}
-              <tbody>
-                {users.length === 0 ? (
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Search users..."
+                    className="pl-8"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+              <Select value={selectedRole} onValueChange={setSelectedRole}>
+                <SelectTrigger className="w-full md:w-[180px]">
+                  <SelectValue placeholder="Filter by role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Roles</SelectItem>
+                  <SelectItem value="Admin">Admin</SelectItem>
+                  <SelectItem value="User">User</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="w-full overflow-x-auto rounded-lg border border-gray-300 shadow-md">
+              <table className="w-full border-collapse">
+                {/* Table Head */}
+                <thead className="bg-gray-100 text-gray-700">
                   <tr>
-                    <td className="p-5 text-center text-gray-500">
-                      No users found.
-                    </td>
+                    <th className="p-3 text-left">Name</th>
+                    <th className="p-3 text-left">Email</th>
+                    <th className="p-3 text-left hidden md:table-cell">Role</th>
+                    <th className="p-3 text-center">Actions</th>
                   </tr>
-                ) : (
-                  users.map((user) => (
-                    <tr
-                      key={user._id}
-                      className="border-t hover:bg-gray-50 transition"
-                    >
-                      <td className="p-3 flex items-center gap-3">
-                        <div className="h-8 w-8 flex items-center justify-center rounded-full bg-gray-300 text-white">
-                          <CircleUserRound />
-                        </div>
-                        {user.username}
-                      </td>
-                      <td className="p-3">{user.email}</td>
-                      <td className="p-3 hidden md:table-cell">{user.role}</td>
+                </thead>
 
-                      <td className="p-3 text-center">
-                        <button
-                          onClick={() => handleDelete(user._id)}
-                          className="rounded-full px-4 py-2 text-sm text-center transition bg-red-600 hover:bg-red-700 text-white"
-                        >
-                          Supprimer
-                        </button>
+                {/* Table Body */}
+                <tbody>
+                  {users.length === 0 ? (
+                    <tr>
+                      <td className="p-5 text-center text-gray-500">
+                        No users found.
                       </td>
                     </tr>
-                  ))
+                  ) : (
+                    users.map((user) => (
+                      <tr
+                        key={user._id}
+                        className="border-t hover:bg-gray-50 transition"
+                      >
+                        <td className="p-3 flex items-center gap-3">
+                          <div className="h-8 w-8 flex items-center justify-center rounded-full bg-gray-300 text-white">
+                            <CircleUserRound />
+                          </div>
+                          {user.username}
+                        </td>
+                        <td className="p-3">{user.email}</td>
+                        <td className="p-3 hidden md:table-cell">
+                          {user.role}
+                        </td>
+
+                        <td className="p-3 text-center">
+                          <button
+                            onClick={() => handleDelete(user._id)}
+                            className="rounded-full px-4 py-2 text-sm text-center transition bg-red-600 hover:bg-red-700 text-white"
+                          >
+                            Supprimer
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            {/* Edit User Dialog */}
+            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Edit User</DialogTitle>
+                  <DialogDescription>
+                    Make changes to the user account.
+                  </DialogDescription>
+                </DialogHeader>
+                {editingUser && (
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="edit-name">Name</Label>
+                      <Input id="edit-name" />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="edit-email">Email</Label>
+                      <Input
+                        id="edit-email"
+                        type="email"
+                        onChange={(e) =>
+                          setEditingUser({
+                            ...editingUser,
+                            email: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="edit-role">Role</Label>
+                      <Select>
+                        <SelectTrigger id="edit-role">
+                          <SelectValue placeholder="Select role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Admin">Admin</SelectItem>
+                          <SelectItem value="Manager">Manager</SelectItem>
+                          <SelectItem value="User">User</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="edit-status">Status</Label>
+                      <Select>
+                        <SelectTrigger id="edit-status">
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Active">Active</SelectItem>
+                          <SelectItem value="Inactive">Inactive</SelectItem>
+                          <SelectItem value="Suspended">Suspended</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 )}
-              </tbody>
-            </table>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsEditDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button>Save Changes</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            {/* Delete Confirmation Dialog */}
+            <Dialog
+              open={isDeleteDialogOpen}
+              onOpenChange={setIsDeleteDialogOpen}
+            >
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Confirm Deletion</DialogTitle>
+                  <DialogDescription>
+                    Are you sure you want to delete this user? This action
+                    cannot be undone.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsDeleteDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button variant="destructive">Delete</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
-          {/* Edit User Dialog */}
-          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Edit User</DialogTitle>
-                <DialogDescription>
-                  Make changes to the user account.
-                </DialogDescription>
-              </DialogHeader>
-              {editingUser && (
-                <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="edit-name">Name</Label>
-                    <Input id="edit-name" />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="edit-email">Email</Label>
-                    <Input
-                      id="edit-email"
-                      type="email"
-                      onChange={(e) =>
-                        setEditingUser({
-                          ...editingUser,
-                          email: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="edit-role">Role</Label>
-                    <Select>
-                      <SelectTrigger id="edit-role">
-                        <SelectValue placeholder="Select role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Admin">Admin</SelectItem>
-                        <SelectItem value="Manager">Manager</SelectItem>
-                        <SelectItem value="User">User</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="edit-status">Status</Label>
-                    <Select>
-                      <SelectTrigger id="edit-status">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Active">Active</SelectItem>
-                        <SelectItem value="Inactive">Inactive</SelectItem>
-                        <SelectItem value="Suspended">Suspended</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+        ) : (
+          <div className="container mx-auto py-12 flex items-center justify-center max-h-screen">
+            <div className="bg-white shadow-lg rounded-lg p-8 max-w-lg text-center">
+              {user?.userData.role === "user" ? (
+                <>
+                  <h2 className="text-red-600 font-bold text-4xl mb-4">
+                    Access Restricted
+                  </h2>
+                  <p className="text-gray-700 text-lg">
+                    You do not have the necessary permissions to access this
+                    page. <br />
+                    Please contact an administrator if you believe this is a
+                    mistake.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-yellow-500 font-bold text-4xl mb-4">
+                    Unauthorized Access
+                  </h2>
+                  <p className="text-gray-700 text-lg">
+                    You need proper authorization to view this content. <br />{" "}
+                    Please log in with an admin account or reach out for
+                    assistance.
+                  </p>
+                </>
               )}
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setIsEditDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button>Save Changes</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          {/* Delete Confirmation Dialog */}
-          <Dialog
-            open={isDeleteDialogOpen}
-            onOpenChange={setIsDeleteDialogOpen}
-          >
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Confirm Deletion</DialogTitle>
-                <DialogDescription>
-                  Are you sure you want to delete this user? This action cannot
-                  be undone.
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setIsDeleteDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button variant="destructive">Delete</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-      ) : (
-        <div className="container mx-auto py-12 flex items-center justify-center max-h-screen">
-          <div className="bg-white shadow-lg rounded-lg p-8 max-w-lg text-center">
-            {user?.userData.role === "user" ? (
-              <>
-                <h2 className="text-red-600 font-bold text-4xl mb-4">
-                  Access Restricted
-                </h2>
-                <p className="text-gray-700 text-lg">
-                  You do not have the necessary permissions to access this page.{" "}
-                  <br />
-                  Please contact an administrator if you believe this is a
-                  mistake.
-                </p>
-              </>
-            ) : (
-              <>
-                <h2 className="text-yellow-500 font-bold text-4xl mb-4">
-                  Unauthorized Access
-                </h2>
-                <p className="text-gray-700 text-lg">
-                  You need proper authorization to view this content. <br />{" "}
-                  Please log in with an admin account or reach out for
-                  assistance.
-                </p>
-              </>
-            )}
+            </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </ProtectedRoute>
   );
 }

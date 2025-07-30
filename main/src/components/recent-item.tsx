@@ -258,16 +258,8 @@ function RecentItem() {
    * @param {string} barcodeValue - The value to encode in the barcode.
    * @param {string} itemName - The name of the item to display on the label.
    */
-<<<<<<< HEAD
-  const handlePrintBarcode = (barcodeValue, itemName) => {
-    const printWindow = window.open("", "_blank", "width=200,height=150");
-=======
   const handlePrintBarcode = (barcodeValue: string, itemName: string) => {
-    const barcodeWidth = 531;
-    const barcodeHeight = 413;
-
-    const printWindow = window.open("", "_blank", "width=400,height=300");
->>>>>>> 8d01b2b2eb82cee8c2bbeefdd5b84c4a66b14007
+    const printWindow = window.open("", "_blank", "width=200,height=150");
     if (!printWindow) {
       console.error("Failed to open print window. Please allow pop-ups.");
       return;
