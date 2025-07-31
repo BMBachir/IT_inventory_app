@@ -24,6 +24,7 @@ import {
   Building,
   LucideTrash2,
   Trash2,
+  BriefcaseBusiness,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {

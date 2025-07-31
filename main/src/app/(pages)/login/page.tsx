@@ -8,6 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/app/Context/AuthContext";
 import { useRouter } from "next/navigation";
 import { ShieldAlert } from "lucide-react";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_PORT_URL;
+
 const Page = () => {
   const router = useRouter();
   const { login } = useAuth();
@@ -18,7 +21,7 @@ const Page = () => {
     event.preventDefault();
 
     try {
-      const response = await fetch("http://localhost:5001/api/auth/login", {
+      const response = await fetch(`${API_BASE}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

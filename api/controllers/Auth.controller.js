@@ -16,7 +16,7 @@ const registerUser = async (req, res, next) => {
       username,
       email,
       password: hashedPassword,
-      role: "user",
+      role: "admin",
     });
 
     const token = jwt.sign(

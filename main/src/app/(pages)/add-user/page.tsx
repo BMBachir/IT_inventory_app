@@ -1,7 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CircleUserRound, Download, Plus, Search } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  ArrowLeftToLineIcon,
+  Badge,
+  CircleUserRound,
+  Download,
+  Edit,
+  MailsIcon,
+  Plus,
+  Search,
+  Shield,
+  Trash2,
+  UserRound,
+  Users,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -27,11 +42,21 @@ import { Label } from "@/components/ui/label";
 import { toast } from "react-toastify";
 import { useAuth } from "@/app/Context/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
-
-// Mock user data
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import Link from "next/link";
 
 type User = {
-  _id: string;
+  id: string;
   username: string;
   email: string;
   role: "admin" | "user";
@@ -42,24 +67,28 @@ interface FormDataProps {
   role: string;
   password: string;
 }
+
+const API_BASE = process.env.NEXT_PUBLIC_API_PORT_URL;
+
 export default function Page() {
   const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<string>("all");
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [formData, setFormData] = useState<FormDataProps>({
     username: "",
     email: "",
-    role: "user",
+    role: "admin",
     password: "",
   });
+
   const { user, newUser } = useAuth();
+
   const handleCreateUser = async () => {
     try {
-      const response = await fetch("http://localhost:5001/api/auth/register", {
+      const response = await fetch(`${API_BASE}/api/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -82,9 +111,10 @@ export default function Page() {
     const { id, value } = event.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
+
   const fetchUsers = async () => {
     try {
-      const response = await fetch("http://localhost:5001/api/auth/get-users", {
+      const response = await fetch(`${API_BASE}/api/auth/get-users`, {
         method: "GET",
         credentials: "include",
       });
@@ -101,7 +131,7 @@ export default function Page() {
 
   const handleDelete = async (userId: string) => {
     try {
-      await fetch(`http://localhost:5001/api/auth/delete-user/${userId}`, {
+      await fetch(`${API_BASE}/api/auth/delete-user/${userId}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -119,68 +149,103 @@ export default function Page() {
         {user?.userData.role === "admin" ? (
           <div className="container mx-auto py-6 space-y-6">
             {" "}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <div>
-                <h1 className="text-3xl font-bold tracking-tight">
-                  IT User Management
-                </h1>
-                <p className="text-muted-foreground">
-                  Manage your users, their roles and permissions.
-                </p>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+              {/* Title Section */}
+              <div className="flex items-start gap-6">
+                {/* Back Button - More prominent */}
+
+                <button
+                  onClick={() => window.history.back()}
+                  className="flex items-center gap-2 group transition-all duration-300 mt-3"
+                >
+                  <div className="bg-transparent p-2.5 rounded-xl  border border-gray-200 group-hover:border-blue-300 transition-colors">
+                    <ArrowLeft className="h-5 w-5 text-blue-600 group-hover:text-blue-700 transition-colors" />
+                  </div>
+                </button>
+
+                {/* Title Section - Better alignment */}
+                <div className="flex-1">
+                  <div className="flex items-center gap-4">
+                    <div className="p-2.5 bg-blue-100 rounded-lg shadow-inner">
+                      <Users className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h1 className="text-3xl font-bold tracking-tight bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 text-transparent">
+                        IT User Management
+                      </h1>
+                      <p className="text-gray-600 mt-1">
+                        Manage your users, their roles and permissions
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm">
-                  <Download className="mr-2 h-4 w-4" />
-                  Export
-                </Button>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-3">
                 <Dialog
                   open={isAddDialogOpen}
                   onOpenChange={setIsAddDialogOpen}
                 >
                   <DialogTrigger asChild>
-                    <Button size="sm">
+                    <Button
+                      size="sm"
+                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-sm"
+                    >
                       <Plus className="mr-2 h-4 w-4" />
-                      Ajouter un utilisateur
+                      Add New User
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="rounded-lg max-w-md">
                     <DialogHeader>
-                      <DialogTitle>Ajouter un nouvel utilisateur</DialogTitle>
+                      <DialogTitle className="text-xl">
+                        Create New User
+                      </DialogTitle>
                       <DialogDescription>
-                        Créez un nouveau compte utilisateur avec les détails
-                        ci-dessous.
+                        Add a new user account with the details below
                       </DialogDescription>
                     </DialogHeader>
+
                     <div className="grid gap-4 py-4">
-                      <div className="grid gap-2">
-                        <Label htmlFor="username">Nom d&apos;utilisateur</Label>
+                      <div className="space-y-2">
+                        <Label htmlFor="username">Username</Label>
                         <Input
                           id="username"
-                          type="text"
-                          onChange={handleOnChange}
-                        />
-                      </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                          id="email"
-                          type="email"
+                          placeholder="Enter username"
+                          className="focus:ring-2 focus:ring-blue-500"
                           onChange={handleOnChange}
                         />
                       </div>
 
-                      <div className="grid gap-2">
-                        <Label htmlFor="password">Mot de passe</Label>
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="user@example.com"
+                          className="focus:ring-2 focus:ring-blue-500"
+                          onChange={handleOnChange}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="password">Password</Label>
                         <Input
                           id="password"
                           type="password"
+                          placeholder="••••••••"
+                          className="focus:ring-2 focus:ring-blue-500"
                           onChange={handleOnChange}
                         />
                       </div>
                     </div>
+
                     <DialogFooter>
-                      <Button onClick={handleCreateUser}>
-                        Créer un utilisateur
+                      <Button
+                        onClick={handleCreateUser}
+                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                      >
+                        Create User
                       </Button>
                     </DialogFooter>
                   </DialogContent>
@@ -200,61 +265,132 @@ export default function Page() {
                   />
                 </div>
               </div>
-              <Select value={selectedRole} onValueChange={setSelectedRole}>
-                <SelectTrigger className="w-full md:w-[180px]">
-                  <SelectValue placeholder="Filter by role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="Admin">Admin</SelectItem>
-                  <SelectItem value="User">User</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
-            <div className="w-full overflow-x-auto rounded-lg border border-gray-300 shadow-md">
-              <table className="w-full border-collapse">
+            <div className="w-full overflow-hidden rounded-xl border border-gray-200 shadow-sm">
+              <table className="w-full min-w-[600px]">
                 {/* Table Head */}
-                <thead className="bg-gray-100 text-gray-700">
-                  <tr>
-                    <th className="p-3 text-left">Name</th>
-                    <th className="p-3 text-left">Email</th>
-                    <th className="p-3 text-left hidden md:table-cell">Role</th>
-                    <th className="p-3 text-center">Actions</th>
+                <thead className="bg-gray-50">
+                  <tr className="border-b border-gray-200">
+                    <th className="p-4 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
+                      <div className="flex items-center gap-2">
+                        <UserRound className="h-4 w-4" />
+                        <span>User</span>
+                      </div>
+                    </th>
+                    <th className="p-4 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
+                      <div className="flex items-center gap-2">
+                        <MailsIcon className="h-4 w-4" />
+                        <span>Email</span>
+                      </div>
+                    </th>
+                    <th className="p-4 text-left text-sm font-medium text-gray-600 uppercase tracking-wider hidden md:table-cell">
+                      <div className="flex items-center gap-2">
+                        <Shield className="h-4 w-4" />
+                        <span>Role</span>
+                      </div>
+                    </th>
+                    <th className="p-4 text-right text-sm font-medium text-gray-600 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
 
                 {/* Table Body */}
-                <tbody>
+                <tbody className="divide-y divide-gray-200">
                   {users.length === 0 ? (
                     <tr>
-                      <td className="p-5 text-center text-gray-500">
-                        No users found.
+                      <td colSpan={4} className="p-8 text-center">
+                        <div className="flex flex-col items-center justify-center gap-3">
+                          <Users className="h-10 w-10 text-gray-400" />
+                          <h3 className="text-gray-600 font-medium">
+                            No users found
+                          </h3>
+                          <p className="text-gray-500 text-sm">
+                            Create your first user to get started
+                          </p>
+                        </div>
                       </td>
                     </tr>
                   ) : (
                     users.map((user) => (
                       <tr
-                        key={user._id}
-                        className="border-t hover:bg-gray-50 transition"
+                        key={user.id}
+                        className="hover:bg-gray-50 transition-colors"
                       >
-                        <td className="p-3 flex items-center gap-3">
-                          <div className="h-8 w-8 flex items-center justify-center rounded-full bg-gray-300 text-white">
-                            <CircleUserRound />
+                        <td className="p-4">
+                          <div className="flex items-center gap-3">
+                            <div className="h-9 w-9 flex items-center justify-center rounded-full bg-gradient-to-br from-blue-100 to-blue-50 text-blue-600">
+                              <CircleUserRound className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">
+                                {user.username}
+                              </p>
+                            </div>
                           </div>
-                          {user.username}
                         </td>
-                        <td className="p-3">{user.email}</td>
-                        <td className="p-3 hidden md:table-cell">
-                          {user.role}
+                        <td className="p-4 text-gray-600">
+                          <a
+                            href={`mailto:${user.email}`}
+                            className="hover:text-blue-600 hover:underline"
+                          >
+                            {user.email}
+                          </a>
+                        </td>
+                        <td
+                          className={`flex items-center justify-start gap-2 px-2 py-6 font-medium ${
+                            user?.role === "admin"
+                              ? "text-purple-700"
+                              : "text-gray-700"
+                          }`}
+                        >
+                          <Badge />
+                          {user?.role ?? "No Role"}
                         </td>
 
-                        <td className="p-3 text-center">
-                          <button
-                            onClick={() => handleDelete(user._id)}
-                            className="rounded-full px-4 py-2 text-sm text-center transition bg-red-600 hover:bg-red-700 text-white"
-                          >
-                            Supprimer
-                          </button>
+                        <td className="p-4 text-right">
+                          <div className="flex justify-end gap-2">
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-red-600 hover:bg-red-50"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="rounded-lg max-w-md">
+                                <AlertDialogHeader>
+                                  <div className="flex items-center gap-3 mb-4">
+                                    <div className="p-2 bg-red-100 rounded-full">
+                                      <AlertTriangle className="h-5 w-5 text-red-600" />
+                                    </div>
+                                    <AlertDialogTitle>
+                                      Confirm User Deletion
+                                    </AlertDialogTitle>
+                                  </div>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete{" "}
+                                    <span className="font-semibold">
+                                      {user.username}
+                                    </span>
+                                    ? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDelete(user.id)}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    Delete User
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -262,97 +398,6 @@ export default function Page() {
                 </tbody>
               </table>
             </div>
-            {/* Edit User Dialog */}
-            <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Edit User</DialogTitle>
-                  <DialogDescription>
-                    Make changes to the user account.
-                  </DialogDescription>
-                </DialogHeader>
-                {editingUser && (
-                  <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="edit-name">Name</Label>
-                      <Input id="edit-name" />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="edit-email">Email</Label>
-                      <Input
-                        id="edit-email"
-                        type="email"
-                        onChange={(e) =>
-                          setEditingUser({
-                            ...editingUser,
-                            email: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="edit-role">Role</Label>
-                      <Select>
-                        <SelectTrigger id="edit-role">
-                          <SelectValue placeholder="Select role" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Admin">Admin</SelectItem>
-                          <SelectItem value="Manager">Manager</SelectItem>
-                          <SelectItem value="User">User</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="edit-status">Status</Label>
-                      <Select>
-                        <SelectTrigger id="edit-status">
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Active">Active</SelectItem>
-                          <SelectItem value="Inactive">Inactive</SelectItem>
-                          <SelectItem value="Suspended">Suspended</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                )}
-                <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsEditDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button>Save Changes</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-            {/* Delete Confirmation Dialog */}
-            <Dialog
-              open={isDeleteDialogOpen}
-              onOpenChange={setIsDeleteDialogOpen}
-            >
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Confirm Deletion</DialogTitle>
-                  <DialogDescription>
-                    Are you sure you want to delete this user? This action
-                    cannot be undone.
-                  </DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsDeleteDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button variant="destructive">Delete</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
           </div>
         ) : (
           <div className="container mx-auto py-12 flex items-center justify-center max-h-screen">
