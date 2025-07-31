@@ -147,9 +147,11 @@ export default function EditMaterialDialog({
     }
   };
 
-  const filteredSubcategories = (subcategories || []).filter(
-    (sub) => sub.categorieId === formData.selectedCategoryId
-  );
+  const filteredSubcategories = Array.isArray(subcategories)
+    ? subcategories.filter(
+        (sub) => sub.categorieId === formData.selectedCategoryId
+      )
+    : [];
 
   const specsToDisplay = [
     { id: "cpu", name: "CPU", type: "text", placeholder: "Intel i5, Ryzen 7" },
@@ -192,16 +194,17 @@ export default function EditMaterialDialog({
                   <SelectValue placeholder="Select user to assign this asset" />
                 </SelectTrigger>
                 <SelectContent>
-                  {users.map((user) => (
-                    <SelectItem key={user.id} value={user.id.toString()}>
-                      <div className="flex flex-col">
-                        <span>{user.fullname}</span>
-                        <span className="text-xs text-gray-500">
-                          {user.service}-{user.id}
-                        </span>
-                      </div>
-                    </SelectItem>
-                  ))}
+                  {Array.isArray(users) &&
+                    users.map((user) => (
+                      <SelectItem key={user.id} value={user.id.toString()}>
+                        <div className="flex flex-col">
+                          <span>{user.fullname}</span>
+                          <span className="text-xs text-gray-500">
+                            {user.service}-{user.id}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
@@ -223,11 +226,12 @@ export default function EditMaterialDialog({
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.code} value={cat.code.toString()}>
-                      {cat.code} - {cat.nom}
-                    </SelectItem>
-                  ))}
+                  {Array.isArray(categories) &&
+                    categories.map((cat) => (
+                      <SelectItem key={cat.code} value={cat.code.toString()}>
+                        {cat.code} - {cat.nom}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
