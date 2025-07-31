@@ -25,6 +25,10 @@ import {
   LucideTrash2,
   Trash2,
   BriefcaseBusiness,
+  Building2Icon,
+  Check,
+  ListIcon,
+  List,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -545,74 +549,159 @@ function RecentItem() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                SERVICE <ChevronDown />
+              <Button
+                variant="outline"
+                className="flex items-center gap-2 border-gray-300 hover:bg-gray-50"
+              >
+                <BriefcaseBusiness className="h-4 w-4 text-gray-600" />
+                <span>{selectedService || "SERVICE"}</span>
+                <ChevronDown className="h-4 w-4 text-gray-500" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <div
+
+            <DropdownMenuContent
+              align="end"
+              className="w-[240px] border-gray-200 shadow-md rounded-lg p-1"
+            >
+              <DropdownMenuItem
                 onClick={() => {
                   setSelectedService("");
                   setCurrentPage(1);
                 }}
-                className="px-4 py-1 hover:bg-gray-100 cursor-pointer font-semibold text-blue-600"
+                className="font-medium text-blue-600 hover:bg-blue-50"
               >
+                <List className="h-4 w-4 mr-2" />
                 All Services
-              </div>
+              </DropdownMenuItem>
+
               {availableServices.map((service, index) => (
-                <div
+                <DropdownMenuItem
                   key={index}
                   onClick={() => {
                     setSelectedService(service);
                     setCurrentPage(1);
                   }}
-                  className={`px-4 py-1 hover:bg-gray-100 cursor-pointer ${
-                    selectedService === service ? "bg-gray-200 font-bold" : ""
-                  }`}
+                  className={selectedService === service ? "bg-blue-50" : ""}
                 >
-                  {service}
-                </div>
+                  <div className="flex items-center gap-3 w-full">
+                    <Building
+                      className={`h-4 w-4 ${
+                        selectedService === service
+                          ? "text-blue-600"
+                          : "text-gray-500"
+                      }`}
+                    />
+                    <span
+                      className={
+                        selectedService === service
+                          ? "text-blue-700 font-medium"
+                          : ""
+                      }
+                    >
+                      {service}
+                    </span>
+                    {selectedService === service && (
+                      <Check className="ml-auto h-4 w-4 text-blue-600" />
+                    )}
+                  </div>
+                </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                BLOC <ChevronDown />
+              <Button
+                variant="outline"
+                className="flex items-center gap-2 border-gray-300 hover:bg-gray-50"
+              >
+                <Building2Icon className="h-4 w-4 text-gray-600" />
+                <span>{selectedBloc || "BLOC"}</span>
+                <ChevronDown className="h-4 w-4 text-gray-500" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <div
+
+            <DropdownMenuContent
+              align="end"
+              className="w-[240px] border-gray-200 shadow-md rounded-lg p-1"
+            >
+              <DropdownMenuItem
                 onClick={() => {
                   setSelectedBloc("");
                   setCurrentPage(1);
                 }}
-                className="px-4 py-1 hover:bg-gray-100 cursor-pointer font-semibold text-blue-600"
+                className="font-medium text-blue-600 hover:bg-blue-50"
               >
+                <ListIcon className="h-4 w-4 mr-2" />
                 All Blocs
-              </div>
+              </DropdownMenuItem>
+
               {availableBlocs.map((bloc, index) => (
-                <div
+                <DropdownMenuItem
                   key={index}
                   onClick={() => {
                     setSelectedBloc(bloc);
                     setCurrentPage(1);
                   }}
-                  className={`px-4 py-1 hover:bg-gray-100 cursor-pointer ${
-                    selectedBloc === bloc ? "bg-gray-200 font-bold" : ""
-                  }`}
+                  className={selectedBloc === bloc ? "bg-blue-50" : ""}
                 >
-                  {bloc}
-                </div>
+                  <div className="flex items-center gap-3 w-full">
+                    <Building2Icon
+                      className={`h-4 w-4 ${
+                        selectedBloc === bloc
+                          ? "text-blue-600"
+                          : "text-gray-500"
+                      }`}
+                    />
+                    <span
+                      className={
+                        selectedBloc === bloc ? "text-blue-700 font-medium" : ""
+                      }
+                    >
+                      {bloc}
+                    </span>
+                    {selectedBloc === bloc && (
+                      <Check className="ml-auto h-4 w-4 text-blue-600" />
+                    )}
+                  </div>
+                </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
 
+          <Button
+            variant={selectedItemIds.size > 0 ? "default" : "outline"}
+            className={`flex items-center gap-2 transition-all ${
+              selectedItemIds.size > 0
+                ? "bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+                : "border-gray-300 bg-white hover:bg-gray-50"
+            }`}
+            onClick={handlePrintSelected}
+            disabled={selectedItemIds.size === 0}
+            title={
+              selectedItemIds.size > 0
+                ? `Print ${selectedItemIds.size} selected items`
+                : "No items selected"
+            }
+          >
+            <Printer
+              className={`h-4 w-4 ${
+                selectedItemIds.size > 0 ? "text-white" : "text-blue-600"
+              }`}
+            />
+            <span>
+              Print Selection
+              {selectedItemIds.size > 0 && (
+                <span className="ml-1.5 inline-flex items-center justify-center h-5 w-5 rounded-full bg-blue-100 text-blue-800 text-xs font-medium">
+                  {selectedItemIds.size}
+                </span>
+              )}
+            </span>
+          </Button>
           <Dialog>
             <DialogTrigger asChild>
               <Button variant="outline" className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
+                <Plus className="h-4 w-4 text-blue-600" />
                 Materials
               </Button>
             </DialogTrigger>
@@ -620,17 +709,6 @@ function RecentItem() {
               <AddItemForm />
             </DialogContent>
           </Dialog>
-
-          <Button
-            variant="outline"
-            className="flex items-center gap-2"
-            onClick={handlePrintSelected}
-            disabled={selectedItemIds.size === 0}
-            title="Imprimer les éléments sélectionnés"
-          >
-            <Printer className="h-4 w-4" />
-            Imprimer la sélection ({selectedItemIds.size})
-          </Button>
         </div>
       </CardHeader>
 
