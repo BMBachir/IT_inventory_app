@@ -25,6 +25,10 @@ import {
   LucideTrash2,
   Trash2,
   BriefcaseBusiness,
+  List,
+  Check,
+  ListIcon,
+  Building2Icon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -125,6 +129,7 @@ function RecentItem() {
   const [selectedItemIds, setSelectedItemIds] = useState<Set<number>>(
     new Set()
   );
+  const [open, setOpen] = useState(false);
 
   const itemsPerPage = 10;
   const pageWindowSize = 5;
@@ -135,8 +140,16 @@ function RecentItem() {
         method: "GET",
         credentials: "include",
       }).then((res) => res.json());
+      if (!Array.isArray(data)) {
+        console.error("API response is not an array:", data);
+        toast.error(
+          "Format de données inattendu de l'API. Impossible de charger les matériaux."
+        );
+        setMat([]); // Ensure 'mat' is an empty array to prevent further errors
+        return; // Stop execution if data is not an array
+      }
       setMat(data);
-
+      console.log(data);
       setAvailableServices([
         ...new Set(
           data.map((item) => item.user?.service).filter(Boolean) as string[]
@@ -150,15 +163,25 @@ function RecentItem() {
       ]);
     } catch (err) {
       console.error("Impossible de charger les données:", err);
+      toast.error("Échec du chargement des données. Veuillez réessayer.");
     }
   };
 
   const fetchInitialData = async () => {
     try {
       const [usersRes, categoriesRes, subcategoriesRes] = await Promise.all([
-        fetch(`${API_BASE}/api/users/`),
-        fetch(`${API_BASE}/api/categories/`),
-        fetch(`${API_BASE}/api/sous-categories/`),
+        fetch(`${API_BASE}/api/users/`, {
+          method: "GET",
+          credentials: "include",
+        }),
+        fetch(`${API_BASE}/api/categories/`, {
+          method: "GET",
+          credentials: "include",
+        }),
+        fetch(`${API_BASE}/api/sous-categories/`, {
+          method: "GET",
+          credentials: "include",
+        }),
       ]);
 
       const users = await usersRes.json();
@@ -170,6 +193,7 @@ function RecentItem() {
       setAllSubcategories(subcategories);
     } catch (error) {
       console.error("Erreur lors du chargement des données initiales:", error);
+      toast.error("Échec du chargement des données initiales.");
     }
   };
 
@@ -178,7 +202,7 @@ function RecentItem() {
     fetchInitialData();
   }, []);
 
-  const filteredData = mat.filter((item) => {
+  const filterData = mat.filter((item) => {
     const matchService =
       selectedService === "" || selectedService === null
         ? true
@@ -208,6 +232,12 @@ function RecentItem() {
       : true;
 
     return matchService && matchBloc && matchSearch;
+  });
+
+  const filteredData = [...filterData].sort((a, b) => {
+    const nameA = a.user?.fullname || "";
+    const nameB = b.user?.fullname || "";
+    return nameA.localeCompare(nameB);
   });
 
   useEffect(() => {
@@ -318,28 +348,43 @@ function RecentItem() {
   const generateBarcodeHtmlSnippet = (
     barcodeValue: string,
     itemName: string,
+    categorie: string,
+    SousCategorie: string,
     isFirst: boolean
   ) => {
     const pageBreakClass = isFirst ? "" : "page-break-new-label";
+
+    const nameDisplay =
+      SousCategorie.toLowerCase() === "laptop"
+        ? `${SousCategorie}-${itemName}`
+        : `${SousCategorie}`;
     return `
       <div class="barcode-container ${pageBreakClass}">
+        <div class="category-name">${nameDisplay}</div>
         <canvas id="barcodeCanvas-${barcodeValue}"></canvas>
         <div class="barcode-value">${barcodeValue}</div>
       </div>
     `;
   };
 
-  // La fonction handlePrintBarcode n'est plus appelée par le composant, mais elle reste définie au cas où.
-  const handlePrintBarcode = (barcodeValue: string, itemName: string) => {
+  const handlePrintBarcode = (
+    barcodeValue: string,
+    itemName: string,
+    categorie: string,
+    sousCategorie: string
+  ) => {
     const printWindow = window.open("", "_blank", "width=200,height=150");
     if (!printWindow) {
       console.error("Failed to open print window. Please allow pop-ups.");
+      toast.error("Veuillez autoriser les pop-ups pour imprimer.");
       return;
     }
 
     const barcodeHtml = generateBarcodeHtmlSnippet(
       barcodeValue,
       itemName,
+      categorie,
+      sousCategorie,
       true
     );
 
@@ -352,9 +397,10 @@ function RecentItem() {
           @page { size: 4.5cm 3.5cm; margin: 0; }
           html, body { width: 4.5cm; height: 3.5cm; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; font-family: 'Inter', sans-serif; }
           .barcode-container { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; box-sizing: border-box; padding: 0.2cm; }
-          canvas { width: 100%; height: 2.5cm; display: block; }
-          .barcode-value { font-family: monospace; font-size: 10px; text-align: center; margin-top: 0.1cm; word-break: break-word; }
-          .item-name { font-size: 9px; text-align: center; margin-top: 0.1cm; word-break: break-word; }
+          .category-name { font-size: 10px; text-align: center; margin-bottom: 0.5cm;margin-top: 0.1cm; word-break: break-word; }
+          canvas { width: 100%; height: 1.3cm; display: block; }
+          .barcode-value { font-family: monospace; font-size: 10px; text-align: center; margin-top: 0.5cm; word-break: break-word; }
+          .item-name { font-size: 9px; text-align: center; margin-top: 0.5cm; word-break: break-word; }
         </style>
         <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
       </head>
@@ -367,7 +413,7 @@ function RecentItem() {
               format: "CODE128",
               displayValue: false,
               width: 2.5,
-              height: 50,
+              height: 5,
               margin: 0,
               background: "#ffffff",
               lineColor: "#000000",
@@ -397,6 +443,8 @@ function RecentItem() {
       allBarcodesHtml += generateBarcodeHtmlSnippet(
         item.codebar,
         item.marque,
+        item.SousCategorie?.categorie?.nom || "",
+        item.SousCategorie?.nom || "",
         index === 0
       );
     });
@@ -437,8 +485,9 @@ function RecentItem() {
           .page-break-new-label {
             page-break-before: always;
           }
-          canvas { width: 100%; height: 2.5cm; display: block; }
-          .barcode-value { font-family: monospace; font-size: 10px; text-align: center; margin-top: 0.1cm; word-break: break-word; }
+         .category-name { font-size: 10px; text-align: center; margin-bottom: 0.5cm;margin-top: 0.1cm; word-break: break-word; }
+          canvas { width: 100%; height: 1.3cm; display: block; }
+              .barcode-value { font-family: monospace; font-size: 10px; text-align: center; margin-top: 0.5cm; word-break: break-word; }
           .item-name { font-size: 9px; text-align: center; margin-top: 0.1cm; word-break: break-word; }
         </style>
         <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
@@ -449,15 +498,13 @@ function RecentItem() {
           document.addEventListener('DOMContentLoaded', () => {
             const barcodes = document.querySelectorAll('canvas');
             barcodes.forEach(canvas => {
-              // CORRECTION: Extraction correcte de la valeur du code-barres de l'ID du canvas
               const id = canvas.id;
               const barcodeValue = id.replace('barcodeCanvas-', '');
-              console.log("barcode:", barcodeValue);
               JsBarcode(canvas, barcodeValue, {
                 format: "CODE128",
                 displayValue: false,
                 width: 2.5,
-                height: 50,
+                height: 5,
                 margin: 0,
                 background: "#ffffff",
                 lineColor: "#000000",
@@ -545,91 +592,170 @@ function RecentItem() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                SERVICE <ChevronDown />
+              <Button
+                variant="outline"
+                className="flex items-center gap-2 border-gray-300 hover:bg-gray-50"
+              >
+                <BriefcaseBusiness className="h-4 w-4 text-gray-600" />
+                <span>{selectedService || "SERVICE"}</span>
+                <ChevronDown className="h-4 w-4 text-gray-500" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <div
+
+            <DropdownMenuContent
+              align="end"
+              className="w-[240px] border-gray-200 shadow-md rounded-lg p-1"
+            >
+              <DropdownMenuItem
                 onClick={() => {
                   setSelectedService("");
                   setCurrentPage(1);
                 }}
-                className="px-4 py-1 hover:bg-gray-100 cursor-pointer font-semibold text-blue-600"
+                className="font-medium text-blue-600 hover:bg-blue-50"
               >
+                <List className="h-4 w-4 mr-2" />
                 All Services
-              </div>
+              </DropdownMenuItem>
+
               {availableServices.map((service, index) => (
-                <div
+                <DropdownMenuItem
                   key={index}
                   onClick={() => {
                     setSelectedService(service);
                     setCurrentPage(1);
                   }}
-                  className={`px-4 py-1 hover:bg-gray-100 cursor-pointer ${
-                    selectedService === service ? "bg-gray-200 font-bold" : ""
-                  }`}
+                  className={selectedService === service ? "bg-blue-50" : ""}
                 >
-                  {service}
-                </div>
+                  <div className="flex items-center gap-3 w-full">
+                    <Building
+                      className={`h-4 w-4 ${
+                        selectedService === service
+                          ? "text-blue-600"
+                          : "text-gray-500"
+                      }`}
+                    />
+                    <span
+                      className={
+                        selectedService === service
+                          ? "text-blue-700 font-medium"
+                          : ""
+                      }
+                    >
+                      {service}
+                    </span>
+                    {selectedService === service && (
+                      <Check className="ml-auto h-4 w-4 text-blue-600" />
+                    )}
+                  </div>
+                </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                BLOC <ChevronDown />
+              <Button
+                variant="outline"
+                className="flex items-center gap-2 border-gray-300 hover:bg-gray-50"
+              >
+                <Building2Icon className="h-4 w-4 text-gray-600" />
+                <span>{selectedBloc || "BLOC"}</span>
+                <ChevronDown className="h-4 w-4 text-gray-500" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <div
+
+            <DropdownMenuContent
+              align="end"
+              className="w-[240px] border-gray-200 shadow-md rounded-lg p-1"
+            >
+              <DropdownMenuItem
                 onClick={() => {
                   setSelectedBloc("");
                   setCurrentPage(1);
                 }}
-                className="px-4 py-1 hover:bg-gray-100 cursor-pointer font-semibold text-blue-600"
+                className="font-medium text-blue-600 hover:bg-blue-50"
               >
+                <ListIcon className="h-4 w-4 mr-2" />
                 All Blocs
-              </div>
+              </DropdownMenuItem>
+
               {availableBlocs.map((bloc, index) => (
-                <div
+                <DropdownMenuItem
                   key={index}
                   onClick={() => {
                     setSelectedBloc(bloc);
                     setCurrentPage(1);
                   }}
-                  className={`px-4 py-1 hover:bg-gray-100 cursor-pointer ${
-                    selectedBloc === bloc ? "bg-gray-200 font-bold" : ""
-                  }`}
+                  className={selectedBloc === bloc ? "bg-blue-50" : ""}
                 >
-                  {bloc}
-                </div>
+                  <div className="flex items-center gap-3 w-full">
+                    <Building2Icon
+                      className={`h-4 w-4 ${
+                        selectedBloc === bloc
+                          ? "text-blue-600"
+                          : "text-gray-500"
+                      }`}
+                    />
+                    <span
+                      className={
+                        selectedBloc === bloc ? "text-blue-700 font-medium" : ""
+                      }
+                    >
+                      {bloc}
+                    </span>
+                    {selectedBloc === bloc && (
+                      <Check className="ml-auto h-4 w-4 text-blue-600" />
+                    )}
+                  </div>
+                </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Dialog>
+          <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
+              <Button
+                onClick={() => setOpen(true)}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4 text-blue-600" />
                 Materials
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[900px] max-h-[100vh] overflow-y-auto">
-              <AddItemForm />
+              <AddItemForm onAdded={fetchData} onClose={() => setOpen(false)} />
             </DialogContent>
           </Dialog>
 
           <Button
-            variant="outline"
-            className="flex items-center gap-2"
+            variant={selectedItemIds.size > 0 ? "default" : "outline"}
+            className={`flex items-center gap-2 transition-all ${
+              selectedItemIds.size > 0
+                ? "bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+                : "border-gray-300 bg-white hover:bg-gray-50"
+            }`}
             onClick={handlePrintSelected}
             disabled={selectedItemIds.size === 0}
-            title="Imprimer les éléments sélectionnés"
+            title={
+              selectedItemIds.size > 0
+                ? `Print ${selectedItemIds.size} selected items`
+                : "No items selected"
+            }
           >
-            <Printer className="h-4 w-4" />
-            Imprimer la sélection ({selectedItemIds.size})
+            <Printer
+              className={`h-4 w-4 ${
+                selectedItemIds.size > 0 ? "text-white" : "text-blue-600"
+              }`}
+            />
+            <span>
+              Print Selection
+              {selectedItemIds.size > 0 && (
+                <span className="ml-1.5 inline-flex items-center justify-center h-5 w-5 rounded-full bg-blue-100 text-blue-800 text-xs font-medium">
+                  {selectedItemIds.size}
+                </span>
+              )}
+            </span>
           </Button>
         </div>
       </CardHeader>
@@ -694,24 +820,18 @@ function RecentItem() {
                 <Badge variant="secondary" className="font-mono text-xs">
                   {item.codebar}
                 </Badge>
-                {/* Bouton d'impression individuelle supprimé ici */}
-                {/* <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handlePrintBarcode(item.codebar, item.marque)}
-                  title="Print Barcode"
-                  className="hover:bg-gray-200"
-                >
-                  <Printer className="h-4 w-4 text-gray-600" />
-                </Button> */}
-
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() =>
-                        handlePrintBarcode(item.codebar, item.marque)
+                        handlePrintBarcode(
+                          item.codebar,
+                          item.marque,
+                          item.SousCategorie?.categorie?.nom || "",
+                          item.SousCategorie?.nom || ""
+                        )
                       }
                       className="hover:bg-blue-50"
                     >

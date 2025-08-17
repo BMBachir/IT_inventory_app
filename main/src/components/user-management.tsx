@@ -38,28 +38,21 @@ import {
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-
 import {
-  PlusCircle,
-  Edit,
+  Edit3,
   Trash2,
-  RefreshCw,
+  ArrowLeft,
   UserPlus,
   Search,
-  Edit2,
-  Edit2Icon,
-  Edit3,
-  ArrowLeftFromLineIcon,
-  ArrowLeft,
-  Plus,
-  Building2,
   Users,
-  ArrowUp,
+  Plus,
   AlertTriangle,
   User,
+  Building2,
+  ArrowUp,
 } from "lucide-react";
 import Link from "next/link";
-import { Label } from "./ui/label";
+import { Label } from "@/components/ui/label";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -69,18 +62,23 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "./ui/alert-dialog";
-// Mock users data
+} from "@/components/ui/alert-dialog";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "./ui/pagination";
 
 const userSchema = z.object({
   fullname: z
     .string()
     .min(3, { message: "Full name must be at least 3 characters." }),
-  email: z.string().email({ message: "Invalid email address." }),
-  tel: z
-    .string()
-    .length(10, { message: "Telephone must be exactly 10 digits." })
-    .regex(/^\d+$/, { message: "Telephone must be numeric." }),
+  email: z.string().optional().or(z.literal("")),
+  tel: z.string().optional().or(z.literal("")),
   service: z.enum([
     "PROD",
     "SUPPLY",
@@ -127,7 +125,6 @@ const serviceOptions = [
   "QUALITE",
   "CERTILAB",
 ];
-
 const blocOptions = [
   "1",
   "2",
@@ -144,51 +141,25 @@ const blocOptions = [
 ];
 
 export function UserManagement() {
+  const API_BASE = process.env.NEXT_PUBLIC_API_PORT_URL;
+
+  type UserFormData = z.infer<typeof userSchema>;
+  type User = UserFormData & { id: string };
+  const [selectedService, setSelectedService] = useState("");
+  const [selectedBloc, setSelectedBloc] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [userToDelete, setUserToDelete] = useState(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_PORT_URL;
-
-  type UserFormData = {
-    fullname: string;
-    email: string;
-    tel: string;
-    service:
-      | "PROD"
-      | "SUPPLY"
-      | "IT"
-      | "MG"
-      | "HR"
-      | "TECH"
-      | "COMM"
-      | "MRK"
-      | "DFC"
-      | "HSE"
-      | "SECRT"
-      | "QUALITE"
-      | "CERTILAB";
-    bloc:
-      | "1"
-      | "2"
-      | "3"
-      | "4"
-      | "5"
-      | "6"
-      | "7"
-      | "8"
-      | "H1"
-      | "H2"
-      | "H3"
-      | "H4";
-  };
-  type User = UserFormData & { id: string };
+  // Pagination state and handlers
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const pageRange = 5;
 
   const form = useForm<UserFormData>({
     resolver: zodResolver(userSchema),
@@ -227,7 +198,6 @@ export function UserManagement() {
       const url = editingUser
         ? `${API_BASE}/api/users/update/${editingUser.id}`
         : `${API_BASE}/api/users/create`;
-
       const method = editingUser ? "PUT" : "POST";
 
       const res = await fetch(url, {
@@ -250,13 +220,7 @@ export function UserManagement() {
 
   const handleAddNew = () => {
     setEditingUser(null);
-    form.reset({
-      fullname: "",
-      email: "",
-      tel: "",
-      service: "IT",
-      bloc: "1",
-    });
+    form.reset({ fullname: "", email: "", tel: "", service: "IT", bloc: "1" });
     setIsFormOpen(true);
   };
 
@@ -291,18 +255,63 @@ export function UserManagement() {
     }
   };
 
+  // Pagination logic
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const filteredUsers = users.filter((user) => {
+    const matchesSearchTerm = [user.fullname, user.email, user.service]
+      .join(" ")
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+
+    // A filter matches if selectedService is "all" OR the user's service matches
+    const matchesService =
+      selectedService === "" ||
+      selectedService === "all" ||
+      user.service === selectedService;
+
+    // A filter matches if selectedBloc is "all" OR the user's bloc matches
+    const matchesBloc =
+      selectedBloc === "" ||
+      selectedBloc === "all" ||
+      user.bloc === selectedBloc;
+
+    return matchesSearchTerm && matchesService && matchesBloc;
+  });
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const getPageNumbers = () => {
+    const pages = [];
+    let startPage = Math.max(1, currentPage - Math.floor(pageRange / 2));
+    let endPage = Math.min(totalPages, startPage + pageRange - 1);
+
+    if (endPage - startPage + 1 < pageRange) {
+      startPage = Math.max(1, endPage - pageRange + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
+  const pageNumbers = getPageNumbers();
+
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="relative">
-        {/* Decorative background elements */}
         <div className="absolute inset-0 overflow-hidden -z-10">
           <div className="absolute top-0 right-0 w-64 h-64 bg-blue-100 rounded-full opacity-10 blur-3xl"></div>
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-100 rounded-full opacity-10 blur-3xl"></div>
         </div>
 
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          {/* Title Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-4">
               <Link
@@ -328,7 +337,6 @@ export function UserManagement() {
             </div>
           </div>
 
-          {/* Add User Button */}
           <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
             <DialogTrigger asChild>
               <Button
@@ -340,7 +348,6 @@ export function UserManagement() {
               </Button>
             </DialogTrigger>
 
-            {/* Dialog Content - Enhanced Form */}
             <DialogContent className="sm:max-w-[600px] rounded-xl">
               <DialogHeader>
                 <DialogTitle className="text-2xl font-bold">
@@ -469,7 +476,6 @@ export function UserManagement() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {/* Total Users Card */}
         <Card className="border-0 shadow-sm rounded-xl bg-gradient-to-br from-blue-50 to-white">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -502,7 +508,6 @@ export function UserManagement() {
           </CardContent>
         </Card>
 
-        {/* Departments Card */}
         <Card className="border-0 shadow-sm rounded-xl bg-gradient-to-br from-indigo-50 to-white">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -551,6 +556,7 @@ export function UserManagement() {
               <CardTitle className="text-2xl font-bold text-gray-900">
                 Users List
               </CardTitle>
+
               <CardDescription className="text-gray-600 mt-1">
                 Search and manage all users in the system
               </CardDescription>
@@ -563,8 +569,53 @@ export function UserManagement() {
                 placeholder="Search users by name, email, department..."
                 className="pl-10 w-full sm:w-64 focus:ring-2 focus:ring-blue-500"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1); // Reset to first page on new search
+                }}
               />
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4 items-center">
+              <Select
+                value={selectedService}
+                onValueChange={(value) => {
+                  setSelectedService(value);
+                  setCurrentPage(1); // Reset page on filter change
+                }}
+              >
+                <SelectTrigger className="w-full sm:w-[180px] focus:ring-2 focus:ring-blue-500">
+                  <SelectValue placeholder="Filter by Department" />
+                </SelectTrigger>
+                <SelectContent>
+                  {/* The special 'clear filter' item with a non-empty string value */}
+                  <SelectItem value="all">All Departments</SelectItem>
+                  {serviceOptions.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select
+                value={selectedBloc}
+                onValueChange={(value) => {
+                  setSelectedBloc(value);
+                  setCurrentPage(1); // Reset page on filter change
+                }}
+              >
+                <SelectTrigger className="w-full sm:w-[180px] focus:ring-2 focus:ring-blue-500">
+                  <SelectValue placeholder="Filter by Location" />
+                </SelectTrigger>
+                <SelectContent>
+                  {/* The special 'clear filter' item with a non-empty string value */}
+                  <SelectItem value="all">All Locations</SelectItem>
+                  {blocOptions.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardHeader>
@@ -574,9 +625,6 @@ export function UserManagement() {
             <Table className="min-w-full">
               <TableHeader className="bg-gray-50">
                 <TableRow>
-                  <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    ID
-                  </TableHead>
                   <TableHead className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Name
                   </TableHead>
@@ -595,70 +643,154 @@ export function UserManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody className="bg-white divide-y divide-gray-200">
-                {users
-                  .filter((user) =>
-                    [user.fullname, user.email, user.service]
-                      .join(" ")
-                      .toLowerCase()
-                      .includes(searchTerm.toLowerCase())
-                  )
-                  .map((user) => (
-                    <TableRow key={user.id} className="hover:bg-gray-50">
-                      <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {user.id}
-                      </TableCell>
-                      <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
-                            <User className="h-5 w-5 text-blue-600" />
-                          </div>
-                          <div className="ml-4">
-                            <div className="font-medium">{user.fullname}</div>
-                          </div>
+                {paginatedUsers.map((user) => (
+                  <TableRow key={user.id} className="hover:bg-gray-50">
+                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                          <User className="h-5 w-5 text-blue-600" />
                         </div>
-                      </TableCell>
-                      <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <a
-                          href={`mailto:${user.email}`}
-                          className="text-blue-600 hover:underline"
+                        <div className="ml-4">
+                          <div className="font-medium">{user.fullname}</div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <a
+                        href={`mailto:${user.email}`}
+                        className="text-blue-600 hover:underline"
+                      >
+                        {user.email}
+                      </a>
+                    </TableCell>
+                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                        {user.service}
+                      </span>
+                    </TableCell>
+                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {user.bloc}
+                    </TableCell>
+                    <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex items-center justify-end space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-gray-300 hover:bg-gray-50"
+                          onClick={() => handleEdit(user)}
                         >
-                          {user.email}
-                        </a>
-                      </TableCell>
-                      <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
-                          {user.service}
-                        </span>
-                      </TableCell>
-                      <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {user.bloc}
-                      </TableCell>
-                      <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex items-center justify-end space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="border-gray-300 hover:bg-gray-50"
-                            onClick={() => handleEdit(user)}
-                          >
-                            <Edit3 className="h-4 w-4 mr-2" />
-                            Edit
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => openDeleteDialog(user)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                          <Edit3 className="h-4 w-4 mr-2" />
+                          Edit
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => openDeleteDialog(user)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </div>
+          {totalPages > 1 && (
+            <div className="pt-4 flex justify-end">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (currentPage > 1) {
+                          handlePageChange(currentPage - 1);
+                        }
+                      }}
+                      className={
+                        currentPage === 1
+                          ? "pointer-events-none opacity-50"
+                          : ""
+                      }
+                    />
+                  </PaginationItem>
+
+                  {pageNumbers[0] > 1 && (
+                    <>
+                      <PaginationItem>
+                        <PaginationLink
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handlePageChange(1);
+                          }}
+                        >
+                          1
+                        </PaginationLink>
+                      </PaginationItem>
+                      <PaginationItem>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    </>
+                  )}
+
+                  {pageNumbers.map((page) => (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        href="#"
+                        isActive={page === currentPage}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handlePageChange(page);
+                        }}
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+
+                  {pageNumbers[pageNumbers.length - 1] < totalPages && (
+                    <>
+                      <PaginationItem>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                      <PaginationItem>
+                        <PaginationLink
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handlePageChange(totalPages);
+                          }}
+                        >
+                          {totalPages}
+                        </PaginationLink>
+                      </PaginationItem>
+                    </>
+                  )}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        if (currentPage < totalPages) {
+                          handlePageChange(currentPage + 1);
+                        }
+                      }}
+                      className={
+                        currentPage === totalPages
+                          ? "pointer-events-none opacity-50"
+                          : ""
+                      }
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </CardContent>
 
         {/* Delete Confirmation Dialog */}

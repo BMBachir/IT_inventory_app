@@ -30,12 +30,12 @@ type Specifications = {
   clavier: string | null;
   souris: string | null;
   usb: string | null;
-  [key: string]: string | number | null; // 👈 Add this
+  [key: string]: string | number | null;
 };
 
 type MaterialFormData = {
   marque: string;
-  selectedUserId: string;
+  selectedUserId: string | null; // Changé pour autoriser `null`
   selectedCategoryId: number | null;
   selectedSubcategoryId: number | null;
   specifications: Specifications;
@@ -62,7 +62,7 @@ export default function EditMaterialDialog({
 }) {
   const [formData, setFormData] = useState<MaterialFormData>({
     marque: "",
-    selectedUserId: "",
+    selectedUserId: null,
     selectedCategoryId: null,
     selectedSubcategoryId: null,
     specifications: {
@@ -82,9 +82,10 @@ export default function EditMaterialDialog({
 
   useEffect(() => {
     if (material) {
+      console.log("users", users);
       setFormData({
         marque: material.marque || "",
-        selectedUserId: material.userId?.toString() || "",
+        selectedUserId: material.userId?.toString() || null,
         selectedCategoryId: material.categorieId || null,
         selectedSubcategoryId: material.sousCategorieId || null,
         specifications: {
@@ -181,7 +182,7 @@ export default function EditMaterialDialog({
                 Assign to User <span className="text-red-500">*</span>
               </Label>
               <Select
-                value={formData.selectedUserId}
+                value={formData.selectedUserId ?? ""} // Correction ici : On s'assure que la valeur est une chaîne (ou une chaîne vide si null)
                 onValueChange={(value) =>
                   setFormData((prev) => ({
                     ...prev,
@@ -213,7 +214,7 @@ export default function EditMaterialDialog({
                 Category
               </Label>
               <Select
-                value={formData.selectedCategoryId?.toString() || ""}
+                value={formData.selectedCategoryId?.toString() || ""} // Correction ici : On convertit en chaîne ou on utilise une chaîne vide
                 onValueChange={(value) => {
                   setFormData((prev) => ({
                     ...prev,
@@ -240,7 +241,7 @@ export default function EditMaterialDialog({
                 Subcategory
               </Label>
               <Select
-                value={formData.selectedSubcategoryId?.toString() || ""}
+                value={formData.selectedSubcategoryId?.toString() || ""} // Correction ici : On convertit en chaîne ou on utilise une chaîne vide
                 disabled={
                   !formData.selectedCategoryId ||
                   filteredSubcategories.length === 0

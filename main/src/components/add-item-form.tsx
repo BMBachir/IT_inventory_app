@@ -22,6 +22,24 @@ import { Separator } from "@/components/ui/separator";
 import { type User } from "@/lib/inventory";
 import { toast } from "react-toastify";
 
+// Combobox imports
+import * as React from "react";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandList,
+  CommandItem,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
 // Définir les types pour les catégories et sous-catégories venant de l'API
 interface Category {
   nom: string;
@@ -51,15 +69,23 @@ type Specifications = {
   ecran: string;
   adf: number | null;
   clavier: number | null;
-  souris: number | null;
-  usb: number | null;
+  souris: string;
+  usb: string;
 };
 
 type SpecKey = keyof Specifications;
 
 const API_BASE = process.env.NEXT_PUBLIC_API_PORT_URL;
 
-export function AddItemForm() {
+interface AddItemFormProps {
+  onAdded?: () => void;
+  onClose?: () => void;
+}
+
+export const AddItemForm: React.FC<AddItemFormProps> = ({
+  onAdded,
+  onClose,
+}) => {
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<number | null>(
     null
@@ -67,6 +93,7 @@ export function AddItemForm() {
   const [users, setUsers] = useState<User[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
+  const [open, setOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     marque: "",
@@ -81,8 +108,8 @@ export function AddItemForm() {
       ecran: "",
       adf: null as number | null,
       clavier: null as number | null,
-      souris: null as number | null,
-      usb: null as number | null,
+      souris: "",
+      usb: "",
     },
   });
 
@@ -122,8 +149,8 @@ export function AddItemForm() {
       placeholder: "e.g.,yes (for scanner)",
     },
     { id: "clavier", name: "Clavier", type: "number", placeholder: "e.g., 1" },
-    { id: "souris", name: "Souris", type: "number", placeholder: "e.g., 1" },
-    { id: "usb", name: "Ports USB", type: "number", placeholder: "e.g., 4" },
+    { id: "souris", name: "Souris", type: "text", placeholder: "e.g., 1" },
+    { id: "usb", name: "Ports USB", type: "text", placeholder: "e.g., 4" },
   ];
 
   // Fetch data from APIs on component mount
@@ -196,10 +223,19 @@ export function AddItemForm() {
 
     // CAS 3 : Imagerie > Scanner
     if (
-      category.nom.toUpperCase() === "IMAGERIE" &&
-      subcategory.nom.toUpperCase() === "SCANNER"
+      (category.nom.toUpperCase() === "IMAGERIE" &&
+        subcategory.nom.toUpperCase() === "SCANNER") ||
+      category.nom.toUpperCase() === "IMAGERIE"
     ) {
       return allFixedSpecifications.filter((spec) => spec.id === "adf");
+    }
+    if (
+      category.nom.toUpperCase() === "MONITORING" ||
+      category.nom.toUpperCase() === "NETWORK" ||
+      category.nom.toUpperCase() === "COMMUNICATION" ||
+      category.nom.toUpperCase() === "ENERGIE"
+    ) {
+      return allFixedSpecifications.filter((spec) => spec.id === "marque");
     }
 
     // CAS PAR DÉFAUT : tout afficher
@@ -270,13 +306,15 @@ export function AddItemForm() {
           ecran: "",
           adf: null,
           clavier: null,
-          souris: null,
-          usb: null,
+          souris: "",
+          usb: "",
         },
       });
 
       setSelectedCategory(null);
       setSelectedSubcategory(null);
+      if (onAdded) onAdded();
+      if (onClose) onClose();
     } catch (error) {
       console.error("Error creating asset:", error);
     }
@@ -284,7 +322,7 @@ export function AddItemForm() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="max-w-4xl mx-auto  space-y-6">
+      <div className="max-w-4xl mx-auto space-y-6">
         <Card>
           <CardHeader>
             <CardTitle className="font-heading">Add New IT Asset</CardTitle>
@@ -299,32 +337,69 @@ export function AddItemForm() {
                 <Label className="font-body" htmlFor="assignedUser">
                   Assign to User <span className="text-red-500">*</span>
                 </Label>
-                <Select
-                  value={formData.selectedUserId}
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      selectedUserId: value,
-                    }))
-                  }
-                  required
-                >
-                  <SelectTrigger id="assignedUser">
-                    <SelectValue placeholder="Select user to assign this asset" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {users.map((user) => (
-                      <SelectItem key={user.id} value={user.id.toString()}>
-                        <div className="flex flex-col">
-                          <span>{user.fullname}</span>
-                          <span className="text-xs text-gray-500">
-                            {user.service}-{user.id}
-                          </span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover open={open} onOpenChange={setOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={open}
+                      className="w-full justify-between"
+                    >
+                      {formData.selectedUserId
+                        ? users.find(
+                            (user) =>
+                              user.id.toString() === formData.selectedUserId
+                          )?.fullname
+                        : "Select user to assign this asset..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[350px] p-0">
+                    <Command>
+                      <CommandInput placeholder="Search user..." />
+                      <CommandList>
+                        <CommandEmpty>No user found.</CommandEmpty>
+                        <CommandGroup>
+                          {users.map((user) => (
+                            <CommandItem
+                              key={user.id}
+                              value={user.fullname}
+                              onSelect={(currentValue) => {
+                                const selectedUser = users.find(
+                                  (u) =>
+                                    u.fullname.toLowerCase() ===
+                                    currentValue.toLowerCase()
+                                );
+                                if (selectedUser) {
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    selectedUserId: selectedUser.id.toString(),
+                                  }));
+                                }
+                                setOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  formData.selectedUserId === user.id.toString()
+                                    ? "opacity-100"
+                                    : "opacity-0"
+                                )}
+                              />
+                              <div className="flex flex-col">
+                                <span>{user.fullname}</span>
+                                <span className="text-xs text-gray-500">
+                                  {user.service} - {user.id}
+                                </span>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="category" className="font-body">
@@ -492,4 +567,4 @@ export function AddItemForm() {
       </div>
     </form>
   );
-}
+};
