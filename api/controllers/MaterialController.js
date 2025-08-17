@@ -1,9 +1,9 @@
 const { Material, User, SousCategorie, Categorie } = require("../models");
-
+const { Sequelize } = require("sequelize");
 exports.createMaterial = async (req, res) => {
   try {
     const { userId, sousCategorieId, ...rest } = req.body;
-    console.log(sousCategorieId);
+
     // Fetch user and sousCategorie
     const user = await User.findByPk(userId);
     const sousCategorie = await SousCategorie.findOne({
@@ -16,19 +16,35 @@ exports.createMaterial = async (req, res) => {
         .json({ message: "User or SousCategorie not found." });
     }
 
-    console.log("the sous cqtegorie code ", sousCategorieId);
-    console.log("the sous cqtegorie result ", sousCategorie);
-
-    const materialCount = await Material.count({
-      where: {
-        sousCategorieId,
-      },
+    // Get all codebars for this sousCategorieId
+    const materials = await Material.findAll({
+      where: { sousCategorieId },
+      attributes: ["codebar"],
     });
 
-    console.log("nbr of material with  sous categories ", materialCount);
+    // Extract the numeric parts (last 4 digits)
+    const numbers = materials
+      .map((m) => {
+        const match = m.codebar.match(/(\d{4})$/);
+        return match ? parseInt(match[1], 10) : null;
+      })
+      .filter((n) => n !== null)
+      .sort((a, b) => a - b);
 
-    const counter = String(materialCount + 1).padStart(4, "0");
-    console.log("counter is ", counter);
+    // Find the first missing number in the sequence
+    let nextNumber = 1;
+    for (let i = 0; i < numbers.length; i++) {
+      if (numbers[i] !== i + 1) {
+        nextNumber = i + 1; // missing slot found
+        break;
+      }
+    }
+    if (nextNumber === 1 && numbers.length > 0) {
+      // no gaps, just take the next after max
+      nextNumber = numbers[numbers.length - 1] + 1;
+    }
+
+    const counter = String(nextNumber).padStart(4, "0");
     const codebar = `B${user.bloc}-${user.service}-${sousCategorie.code}-${counter}`;
 
     const newMaterial = await Material.create({
