@@ -13,7 +13,9 @@ exports.createUser = async (req, res) => {
 // Get all users
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.findAll();
+    const users = await User.findAll({
+      order: [["fullname", "ASC"]],
+    });
     res.status(200).json(users);
   } catch (err) {
     res.status(500).json({ error: err.message });

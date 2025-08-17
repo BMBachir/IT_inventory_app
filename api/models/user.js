@@ -49,16 +49,9 @@ const User = db.define(
     },
     email: {
       type: DataTypes.STRING(200),
-      validate: {
-        isEmail: true,
-      },
     },
     tel: {
-      type: DataTypes.STRING(10),
-      validate: {
-        isNumeric: true,
-        len: [10, 10],
-      },
+      type: DataTypes.STRING(300),
     },
   },
   {

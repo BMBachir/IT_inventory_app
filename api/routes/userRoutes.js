@@ -12,6 +12,7 @@ router.post(
   authorizeAdmin,
   userController.createUser
 );
+
 router.get("/", authenticateUser, authorizeAdmin, userController.getAllUsers);
 router.get(
   "/:id",

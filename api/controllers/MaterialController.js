@@ -16,15 +16,19 @@ exports.createMaterial = async (req, res) => {
         .json({ message: "User or SousCategorie not found." });
     }
 
+    console.log("the sous cqtegorie code ", sousCategorieId);
+    console.log("the sous cqtegorie result ", sousCategorie);
+
     const materialCount = await Material.count({
       where: {
-        userId,
         sousCategorieId,
       },
     });
 
-    const counter = String(materialCount + 1).padStart(2, "0");
+    console.log("nbr of material with  sous categories ", materialCount);
 
+    const counter = String(materialCount + 1).padStart(4, "0");
+    console.log("counter is ", counter);
     const codebar = `B${user.bloc}-${user.service}-${sousCategorie.code}-${counter}`;
 
     const newMaterial = await Material.create({
