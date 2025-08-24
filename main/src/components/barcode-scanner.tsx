@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Card,
   CardContent,
@@ -23,7 +23,6 @@ import {
   Phone,
   Mail,
   AlertCircle,
-  CheckCircle,
   Search,
   History,
   Edit,
@@ -40,9 +39,13 @@ import {
   CalendarDays,
   Barcode,
   Loader2,
-  TestTube2,
   ArrowLeft,
+  Camera,
+  X,
+  Upload,
 } from "lucide-react";
+
+import { BrowserMultiFormatReader } from "@zxing/library";
 
 type User = {
   id: number;
@@ -84,6 +87,7 @@ export function ScannerPage() {
   const [material, setMaterial] = useState<Material | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
 
   const fetchMaterial = async (code: string) => {
     if (!code.trim()) {
@@ -109,6 +113,7 @@ export function ScannerPage() {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     if (!codeInput) return;
 
@@ -118,6 +123,37 @@ export function ScannerPage() {
 
     return () => clearTimeout(delayDebounce);
   }, [codeInput]);
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleImageUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    if (!event.target.files || event.target.files.length === 0) return;
+
+    const file = event.target.files[0];
+    const reader = new FileReader();
+
+    reader.onload = async () => {
+      try {
+        const img = new Image();
+        img.src = reader.result as string;
+        img.onload = async () => {
+          const codeReader = new BrowserMultiFormatReader();
+          const result = await codeReader.decodeFromImageElement(img);
+          if (result) {
+            setCodeInput(result.getText()); // ✅ set in your input
+          }
+        };
+      } catch (err) {
+        console.error("Error decoding barcode:", err);
+        setError("Could not read barcode from image.");
+      }
+    };
+
+    reader.readAsDataURL(file);
+  };
+
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       {/* Header */}
@@ -169,7 +205,7 @@ export function ScannerPage() {
       </div>
       {/*=============================================* left side*/}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="border-0 bg-gradient-to-br from-white to-gray-50 shadow-lg rounded-xl overflow-hidden">
+        <Card className="border-0 bg-gradient-to-br from-white to-gray-50 shadow-lg rounded-xl overflow-hidden max-w-2xl ">
           <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 border-b border-gray-100">
             <div className="flex items-center gap-4">
               <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-200">
@@ -180,32 +216,69 @@ export function ScannerPage() {
                   Barcode Scanner
                 </CardTitle>
                 <CardDescription className="text-gray-600 mt-1">
-                  Use camera to scan barcodes or enter code manually
+                  Use your camera or enter a code manually
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
 
           <CardContent className="p-6 space-y-6">
-            {/* Test Scanner Section */}
+            {/* === SCAN WITH CAMERA SECTION === */}
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <div className="bg-purple-100 p-2 rounded-lg">
-                  <TestTube2 className="h-5 w-5 text-purple-600" />
+                  <Camera className="h-5 w-5 text-purple-600" />
                 </div>
                 <h3 className="font-semibold text-lg text-gray-800">
-                  Quick Search
+                  Scan with Camera
                 </h3>
               </div>
 
-              <p className="text-sm text-gray-600">
-                Simulate scanning with the barcodes:
-              </p>
+              {/* This button will toggle the scanner view */}
+              <Button
+                variant="outline"
+                className="w-full flex items-center gap-2"
+                onClick={() => setShowScanner(!showScanner)}
+              >
+                {showScanner ? (
+                  <>
+                    <X className="h-4 w-4" /> Close Scanner
+                  </>
+                ) : (
+                  <>
+                    <Camera className="h-4 w-4" /> Open Scanner
+                  </>
+                )}
+              </Button>
+
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="bg-green-100 p-2 rounded-lg">
+                    <Upload className="h-5 w-5 text-green-600" />
+                  </div>
+                  <h3 className="font-semibold text-lg text-gray-800">
+                    Upload Barcode Image
+                  </h3>
+                </div>
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  className="block w-full text-sm text-gray-500
+               file:mr-4 file:py-2 file:px-4
+               file:rounded-lg file:border-0
+               file:text-sm file:font-semibold
+               file:bg-blue-50 file:text-blue-700
+               hover:file:bg-blue-100"
+                  onChange={handleImageUpload}
+                />
+              </div>
             </div>
 
             <Separator className="my-4" />
 
-            {/* Manual Entry Section */}
+            {/* === MANUAL ENTRY SECTION === */}
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <div className="bg-blue-100 p-2 rounded-lg">
@@ -215,7 +288,6 @@ export function ScannerPage() {
                   Manual Entry
                 </h3>
               </div>
-
               <div className="flex gap-2">
                 <Input
                   placeholder="Enter barcode or item code..."
@@ -223,7 +295,6 @@ export function ScannerPage() {
                   value={codeInput}
                   onChange={(e) => setCodeInput(e.target.value)}
                 />
-
                 <Button
                   size="lg"
                   className="bg-blue-600 hover:bg-blue-700 px-6"
@@ -241,7 +312,7 @@ export function ScannerPage() {
             </div>
 
             {/* Status Indicators */}
-            <div className="space-y-2">
+            <div className="space-y-2 pt-2">
               {loading && (
                 <div className="flex items-center gap-2 text-blue-600">
                   <Loader2 className="h-4 w-4 animate-spin" />

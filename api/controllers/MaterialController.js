@@ -1,5 +1,5 @@
 const { Material, User, SousCategorie, Categorie } = require("../models");
-const { Sequelize } = require("sequelize");
+
 exports.createMaterial = async (req, res) => {
   try {
     const { userId, sousCategorieId, ...rest } = req.body;
@@ -31,16 +31,14 @@ exports.createMaterial = async (req, res) => {
       .filter((n) => n !== null)
       .sort((a, b) => a - b);
 
-    // Find the first missing number in the sequence
     let nextNumber = 1;
     for (let i = 0; i < numbers.length; i++) {
       if (numbers[i] !== i + 1) {
-        nextNumber = i + 1; // missing slot found
+        nextNumber = i + 1;
         break;
       }
     }
     if (nextNumber === 1 && numbers.length > 0) {
-      // no gaps, just take the next after max
       nextNumber = numbers[numbers.length - 1] + 1;
     }
 
