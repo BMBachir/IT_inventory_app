@@ -283,50 +283,51 @@ function DataDashboard() {
               {categoryStats.map((category) => {
                 const IconComponent = category.icon;
                 return (
-                  <Link key={category.id} href={`/category/${category.id}`}>
-                    <Card className="border-0 shadow-xs hover:shadow-md transition-all duration-300 hover:border-blue-200">
-                      <CardContent className="p-5">
-                        <div className="flex items-start space-x-4">
-                          <div
-                            className={`p-3 rounded-xl ${category.color} text-white shadow-sm`}
-                          >
-                            <IconComponent className="h-5 w-5" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-gray-900 truncate">
-                              {category.name}
-                            </h3>
-                            <p className="text-sm text-gray-500 font-mono mt-1">
-                              {category.code}
-                            </p>
-                            <div className="mt-2 flex flex-wrap gap-2">
-                              {category.subCategories
-                                ?.slice(0, 2)
-                                .map((subCat) => (
-                                  <span
-                                    key={subCat}
-                                    className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded-full"
-                                  >
-                                    {subCat}
-                                  </span>
-                                ))}
-                              {category.subCategories?.length > 2 && (
-                                <span className="text-xs px-2 py-1 bg-gray-100 text-gray-500 rounded-full">
-                                  +{category.subCategories.length - 2} more
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <Badge
-                            variant="outline"
-                            className="border-blue-200 bg-blue-50 text-blue-700 px-3 py-1"
-                          >
-                            {category.count}
-                          </Badge>
+                  <Card
+                    key={category.id}
+                    className="border-0 shadow-xs hover:shadow-md transition-all duration-300 hover:border-blue-200"
+                  >
+                    <CardContent className="p-5">
+                      <div className="flex items-start space-x-4">
+                        <div
+                          className={`p-3 rounded-xl ${category.color} text-white shadow-sm`}
+                        >
+                          <IconComponent className="h-5 w-5" />
                         </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-gray-900 truncate">
+                            {category.name}
+                          </h3>
+                          <p className="text-sm text-gray-500 font-mono mt-1">
+                            {category.code}
+                          </p>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {category.subCategories
+                              ?.slice(0, 2)
+                              .map((subCat) => (
+                                <span
+                                  key={subCat}
+                                  className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded-full"
+                                >
+                                  {subCat}
+                                </span>
+                              ))}
+                            {category.subCategories?.length > 2 && (
+                              <span className="text-xs px-2 py-1 bg-gray-100 text-gray-500 rounded-full">
+                                +{category.subCategories.length - 2} more
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <Badge
+                          variant="outline"
+                          className="border-blue-200 bg-blue-50 text-blue-700 px-3 py-1"
+                        >
+                          {category.count}
+                        </Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
                 );
               })}
             </div>
