@@ -50,6 +50,14 @@ import {
   User,
   Building2,
   ArrowUp,
+  Download,
+  Package,
+  Smartphone,
+  Laptop,
+  FileText,
+  Eye,
+  Barcode,
+  Filter,
 } from "lucide-react";
 import Link from "next/link";
 import { Label } from "@/components/ui/label";
@@ -140,11 +148,30 @@ const blocOptions = [
   "H4",
 ];
 
+interface Categorie {
+  id: number;
+  nom: string;
+}
+
+interface SousCategorie {
+  id: number;
+  nom: string;
+  categorie?: Categorie;
+}
+
+interface Material {
+  id: number;
+  codebar: string;
+  marque: string;
+  SousCategorie?: SousCategorie;
+}
+
 export function UserManagement() {
   const API_BASE = process.env.NEXT_PUBLIC_API_PORT_URL;
 
   type UserFormData = z.infer<typeof userSchema>;
   type User = UserFormData & { id: string };
+
   const [selectedService, setSelectedService] = useState("");
   const [selectedBloc, setSelectedBloc] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -155,6 +182,8 @@ export function UserManagement() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [materials, setMaterials] = useState<Material[]>([]);
+  const [isMaterialsDialogOpen, setIsMaterialsDialogOpen] = useState(false);
 
   // Pagination state and handlers
   const [currentPage, setCurrentPage] = useState(1);
@@ -301,6 +330,23 @@ export function UserManagement() {
     return pages;
   };
   const pageNumbers = getPageNumbers();
+
+  const handleViewMaterials = async (user: User) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/materials/by-user/${user.id}`, {
+        credentials: "include",
+      });
+
+      if (!res.ok) throw new Error("Failed to fetch materials");
+
+      const data = await res.json();
+      setSelectedUser(user);
+      setMaterials(data);
+      setIsMaterialsDialogOpen(true);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
@@ -682,6 +728,7 @@ export function UserManagement() {
                           <Edit3 className="h-4 w-4 mr-2" />
                           Edit
                         </Button>
+
                         <Button
                           variant="destructive"
                           size="sm"
@@ -690,12 +737,160 @@ export function UserManagement() {
                           <Trash2 className="h-4 w-4 mr-2" />
                           Delete
                         </Button>
+
+                        {/* New Button */}
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => handleViewMaterials(user)}
+                        >
+                          📦 View Materials
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
+            <Dialog
+              open={isMaterialsDialogOpen}
+              onOpenChange={setIsMaterialsDialogOpen}
+            >
+              <DialogContent className="max-w-4xl p-0 overflow-hidden rounded-xl">
+                <DialogHeader className="px-6 pt-6 pb-4">
+                  <div className="flex flex-col space-y-2">
+                    <DialogTitle className="text-xl font-semibold flex items-center">
+                      <div className="bg-blue-100 p-2 rounded-lg mr-3">
+                        <User className="h-5 w-5 text-blue-600" />
+                      </div>
+                      Equipment Assigned to{" "}
+                      <span className="text-blue-600 ml-1">
+                        {selectedUser?.fullname}
+                      </span>
+                    </DialogTitle>
+                    <p className="text-sm text-muted-foreground">
+                      {materials.length} items in inventory
+                    </p>
+                  </div>
+                </DialogHeader>
+
+                {materials.length > 0 ? (
+                  <div className="px-6 pb-6">
+                    <div className="rounded-lg border overflow-hidden shadow-sm">
+                      <Table>
+                        <TableHeader className="bg-slate-50">
+                          <TableRow>
+                            <TableHead className="w-[140px] py-3.5 font-medium text-slate-700">
+                              Codebar
+                            </TableHead>
+                            <TableHead className="py-3.5 font-medium text-slate-700">
+                              Brand
+                            </TableHead>
+                            <TableHead className="py-3.5 font-medium text-slate-700">
+                              Category
+                            </TableHead>
+                            <TableHead className="py-3.5 font-medium text-slate-700">
+                              Subcategory
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {materials.map((m) => (
+                            <TableRow
+                              key={m.id}
+                              className="border-slate-100 hover:bg-slate-50/50"
+                            >
+                              <TableCell className="py-3.5 font-medium">
+                                <div className="flex items-center gap-2">
+                                  <div className="bg-slate-100 p-1.5 rounded-md">
+                                    <Barcode className="h-3.5 w-3.5 text-slate-600" />
+                                  </div>
+                                  <span className="font-mono text-sm">
+                                    {m.codebar}
+                                  </span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="py-3.5">
+                                {m.marque}
+                              </TableCell>
+                              <TableCell className="py-3.5">
+                                {m.SousCategorie?.categorie?.nom}
+                              </TableCell>
+                              <TableCell className="py-3.5">
+                                {m.SousCategorie?.nom}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+
+                    {/* Summary section */}
+                    <div className="mt-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                      <p className="text-sm text-muted-foreground">
+                        Showing all {materials.length} items
+                      </p>
+                      <div className="flex flex-wrap gap-4">
+                        <div className="flex items-center gap-2 bg-blue-50/70 px-3 py-1.5 rounded-full">
+                          <Laptop className="h-4 w-4 text-blue-600" />
+                          <span className="text-sm text-blue-700">
+                            {
+                              materials.filter(
+                                (m) =>
+                                  m.SousCategorie?.categorie?.nom === "Computer"
+                              ).length
+                            }{" "}
+                            Computers
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 bg-green-50/70 px-3 py-1.5 rounded-full">
+                          <Smartphone className="h-4 w-4 text-green-600" />
+                          <span className="text-sm text-green-700">
+                            {
+                              materials.filter(
+                                (m) =>
+                                  m.SousCategorie?.categorie?.nom === "Phone"
+                              ).length
+                            }{" "}
+                            Phones
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="px-6 pb-6">
+                    <div className="flex flex-col items-center justify-center py-12 px-4 text-center rounded-lg border border-dashed border-slate-200">
+                      <div className="bg-slate-100 p-4 rounded-full">
+                        <Package className="h-8 w-8 text-slate-400" />
+                      </div>
+                      <h3 className="mt-4 text-lg font-semibold text-slate-800">
+                        No equipment assigned
+                      </h3>
+                      <p className="text-muted-foreground mt-2 max-w-md">
+                        {selectedUser?.fullname} doesn't have any equipment
+                        assigned yet.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <DialogFooter className="px-6 py-4 border-t bg-slate-50/50">
+                  <div className="flex w-full justify-between items-center">
+                    <Button variant="outline" className="gap-2">
+                      <Download className="h-4 w-4" />
+                      Export List
+                    </Button>
+                    <Button
+                      onClick={() => setIsMaterialsDialogOpen(false)}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      Close
+                    </Button>
+                  </div>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
           {totalPages > 1 && (
             <div className="pt-4 flex justify-end">

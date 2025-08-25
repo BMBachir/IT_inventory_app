@@ -187,6 +187,39 @@ exports.getAllMaterials = async (req, res) => {
     res.status(500).json({ message: "Failed to retrieve materials" });
   }
 };
+exports.getMaterialsByUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const materials = await Material.findAll({
+      where: { userId },
+      include: [
+        {
+          model: User,
+          attributes: ["id", "fullname", "email", "service", "bloc"],
+        },
+        {
+          model: SousCategorie,
+          as: "SousCategorie",
+          attributes: ["code", "nom"],
+          include: [
+            {
+              model: Categorie,
+              as: "categorie",
+              attributes: ["code", "nom"],
+            },
+          ],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    res.status(200).json(materials);
+  } catch (error) {
+    console.error("Error fetching materials for user:", error);
+    res.status(500).json({ message: "Failed to retrieve materials" });
+  }
+};
 
 // 🔹 Get Material by Code
 exports.getMaterialByCode = async (req, res) => {

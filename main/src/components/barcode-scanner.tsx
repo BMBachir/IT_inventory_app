@@ -223,61 +223,6 @@ export function ScannerPage() {
           </CardHeader>
 
           <CardContent className="p-6 space-y-6">
-            {/* === SCAN WITH CAMERA SECTION === */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="bg-purple-100 p-2 rounded-lg">
-                  <Camera className="h-5 w-5 text-purple-600" />
-                </div>
-                <h3 className="font-semibold text-lg text-gray-800">
-                  Scan with Camera
-                </h3>
-              </div>
-
-              {/* This button will toggle the scanner view */}
-              <Button
-                variant="outline"
-                className="w-full flex items-center gap-2"
-                onClick={() => setShowScanner(!showScanner)}
-              >
-                {showScanner ? (
-                  <>
-                    <X className="h-4 w-4" /> Close Scanner
-                  </>
-                ) : (
-                  <>
-                    <Camera className="h-4 w-4" /> Open Scanner
-                  </>
-                )}
-              </Button>
-
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="bg-green-100 p-2 rounded-lg">
-                    <Upload className="h-5 w-5 text-green-600" />
-                  </div>
-                  <h3 className="font-semibold text-lg text-gray-800">
-                    Upload Barcode Image
-                  </h3>
-                </div>
-
-                <input
-                  type="file"
-                  accept="image/*"
-                  ref={fileInputRef}
-                  className="block w-full text-sm text-gray-500
-               file:mr-4 file:py-2 file:px-4
-               file:rounded-lg file:border-0
-               file:text-sm file:font-semibold
-               file:bg-blue-50 file:text-blue-700
-               hover:file:bg-blue-100"
-                  onChange={handleImageUpload}
-                />
-              </div>
-            </div>
-
-            <Separator className="my-4" />
-
             {/* === MANUAL ENTRY SECTION === */}
             <div className="space-y-3">
               <div className="flex items-center gap-3">

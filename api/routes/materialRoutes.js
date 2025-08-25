@@ -21,6 +21,13 @@ router.get(
 );
 
 router.get(
+  "/by-user/:userId",
+  authenticateUser,
+  authorizeAdmin,
+  materialController.getMaterialsByUser
+);
+
+router.get(
   "/:codebar",
   authenticateUser,
   authorizeAdmin,
