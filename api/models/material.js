@@ -29,6 +29,14 @@ const Material = db.define(
     clavier: { type: DataTypes.INTEGER, allowNull: true },
     souris: { type: DataTypes.STRING(200), allowNull: true },
     usb: { type: DataTypes.STRING(200), allowNull: true },
+    notes: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    accessoire: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
 
     userId: {
       type: DataTypes.INTEGER,

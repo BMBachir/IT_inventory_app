@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -23,6 +23,7 @@ import {
   Phone,
   Mail,
   AlertCircle,
+  CheckCircle,
   Search,
   History,
   Edit,
@@ -39,13 +40,9 @@ import {
   CalendarDays,
   Barcode,
   Loader2,
+  TestTube2,
   ArrowLeft,
-  Camera,
-  X,
-  Upload,
 } from "lucide-react";
-
-import { BrowserMultiFormatReader } from "@zxing/library";
 
 type User = {
   id: number;
@@ -71,6 +68,8 @@ type Material = {
   clavier: number;
   souris: number;
   usb: number;
+  accessoire: string; // added
+  notes: string; // added
   userId: number;
   sousCategorieId: string;
   categorieId: string | null;
@@ -87,7 +86,6 @@ export function ScannerPage() {
   const [material, setMaterial] = useState<Material | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showScanner, setShowScanner] = useState(false);
 
   const fetchMaterial = async (code: string) => {
     if (!code.trim()) {
@@ -113,7 +111,6 @@ export function ScannerPage() {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     if (!codeInput) return;
 
@@ -123,36 +120,6 @@ export function ScannerPage() {
 
     return () => clearTimeout(delayDebounce);
   }, [codeInput]);
-
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  const handleImageUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    if (!event.target.files || event.target.files.length === 0) return;
-
-    const file = event.target.files[0];
-    const reader = new FileReader();
-
-    reader.onload = async () => {
-      try {
-        const img = new Image();
-        img.src = reader.result as string;
-        img.onload = async () => {
-          const codeReader = new BrowserMultiFormatReader();
-          const result = await codeReader.decodeFromImageElement(img);
-          if (result) {
-            setCodeInput(result.getText()); // ✅ set in your input
-          }
-        };
-      } catch (err) {
-        console.error("Error decoding barcode:", err);
-        setError("Could not read barcode from image.");
-      }
-    };
-
-    reader.readAsDataURL(file);
-  };
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
@@ -205,7 +172,7 @@ export function ScannerPage() {
       </div>
       {/*=============================================* left side*/}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="border-0 bg-gradient-to-br from-white to-gray-50 shadow-lg rounded-xl overflow-hidden max-w-2xl ">
+        <Card className="border-0 bg-gradient-to-br from-white to-gray-50 shadow-lg rounded-xl overflow-hidden">
           <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 border-b border-gray-100">
             <div className="flex items-center gap-4">
               <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-200">
@@ -216,14 +183,32 @@ export function ScannerPage() {
                   Barcode Scanner
                 </CardTitle>
                 <CardDescription className="text-gray-600 mt-1">
-                  Use your camera or enter a code manually
+                  Use camera to scan barcodes or enter code manually
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
 
           <CardContent className="p-6 space-y-6">
-            {/* === MANUAL ENTRY SECTION === */}
+            {/* Test Scanner Section */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="bg-purple-100 p-2 rounded-lg">
+                  <TestTube2 className="h-5 w-5 text-purple-600" />
+                </div>
+                <h3 className="font-semibold text-lg text-gray-800">
+                  Quick Search
+                </h3>
+              </div>
+
+              <p className="text-sm text-gray-600">
+                Simulate scanning with the barcodes:
+              </p>
+            </div>
+
+            <Separator className="my-4" />
+
+            {/* Manual Entry Section */}
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <div className="bg-blue-100 p-2 rounded-lg">
@@ -233,6 +218,7 @@ export function ScannerPage() {
                   Manual Entry
                 </h3>
               </div>
+
               <div className="flex gap-2">
                 <Input
                   placeholder="Enter barcode or item code..."
@@ -240,6 +226,7 @@ export function ScannerPage() {
                   value={codeInput}
                   onChange={(e) => setCodeInput(e.target.value)}
                 />
+
                 <Button
                   size="lg"
                   className="bg-blue-600 hover:bg-blue-700 px-6"
@@ -257,7 +244,7 @@ export function ScannerPage() {
             </div>
 
             {/* Status Indicators */}
-            <div className="space-y-2 pt-2">
+            <div className="space-y-2">
               {loading && (
                 <div className="flex items-center gap-2 text-blue-600">
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -506,7 +493,9 @@ export function ScannerPage() {
                 {/* Peripheral Section */}
                 {(material.clavier > 0 ||
                   material.souris > 0 ||
-                  material.usb > 0) && (
+                  material.usb > 0 ||
+                  (material.accessoire && material.accessoire.trim() !== "") ||
+                  (material.notes && material.notes.trim() !== "")) && (
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
                       <div className="bg-amber-100 p-2 rounded-lg">
@@ -517,44 +506,62 @@ export function ScannerPage() {
                       </h4>
                     </div>
 
-                    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {material.clavier > 0 && (
-                          <div className="space-y-1">
-                            <Label className="text-xs uppercase tracking-wider text-gray-500">
-                              Keyboard
-                            </Label>
-                            <div className="flex items-center gap-2">
-                              <Keyboard className="h-4 w-4 text-gray-500" />
-                              <p className="font-medium">{material.clavier}</p>
-                            </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {material.clavier > 0 && (
+                        <div className="space-y-1">
+                          <Label className="text-xs uppercase tracking-wider text-gray-500">
+                            Keyboard
+                          </Label>
+                          <div className="flex items-center gap-2">
+                            <Keyboard className="h-4 w-4 text-gray-500" />
+                            <p className="font-medium">{material.clavier}</p>
                           </div>
-                        )}
+                        </div>
+                      )}
 
-                        {material.souris > 0 && (
-                          <div className="space-y-1">
-                            <Label className="text-xs uppercase tracking-wider text-gray-500">
-                              Mouse
-                            </Label>
-                            <div className="flex items-center gap-2">
-                              <Mouse className="h-4 w-4 text-gray-500" />
-                              <p className="font-medium">{material.souris}</p>
-                            </div>
+                      {material.souris > 0 && (
+                        <div className="space-y-1">
+                          <Label className="text-xs uppercase tracking-wider text-gray-500">
+                            Mouse
+                          </Label>
+                          <div className="flex items-center gap-2">
+                            <Mouse className="h-4 w-4 text-gray-500" />
+                            <p className="font-medium">{material.souris}</p>
                           </div>
-                        )}
+                        </div>
+                      )}
 
-                        {material.usb > 0 && (
-                          <div className="space-y-1">
-                            <Label className="text-xs uppercase tracking-wider text-gray-500">
-                              USB
-                            </Label>
-                            <div className="flex items-center gap-2">
-                              <Usb className="h-4 w-4 text-gray-500" />
-                              <p className="font-medium">{material.usb}</p>
-                            </div>
+                      {material.accessoire?.trim() && (
+                        <div className="space-y-1">
+                          <Label className="text-xs uppercase tracking-wider text-gray-500">
+                            Accessoire
+                          </Label>
+                          <div className="flex flex-col gap-1">
+                            {material.accessoire
+                              .split(";")
+                              .map((item, index) => (
+                                <p key={index} className="font-medium">
+                                  {item.trim()}
+                                </p>
+                              ))}
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
+
+                      {material.notes?.trim() && (
+                        <div className="space-y-1">
+                          <Label className="text-xs uppercase tracking-wider text-gray-500">
+                            Notes
+                          </Label>
+                          <div className="flex flex-col gap-1">
+                            {material.notes.split(";").map((item, index) => (
+                              <p key={index} className="font-medium">
+                                {item.trim()}
+                              </p>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
