@@ -50,14 +50,10 @@ import {
   User,
   Building2,
   ArrowUp,
-  Download,
   Package,
   Smartphone,
   Laptop,
-  FileText,
-  Eye,
   Barcode,
-  Filter,
 } from "lucide-react";
 import Link from "next/link";
 import { Label } from "@/components/ui/label";
@@ -80,6 +76,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "./ui/pagination";
+import PdfDownloadButton from "./pdf/PdfDownloadButton";
 
 const userSchema = z.object({
   fullname: z
@@ -159,13 +156,40 @@ interface SousCategorie {
   categorie?: Categorie;
 }
 
-interface Material {
+export interface Material {
   id: number;
   codebar: string;
   marque: string;
+  cpu?: string;
+  ram?: string;
+  disk?: string;
+  Ncpu?: number;
+  Nram?: number;
+  Ndisk?: number;
+  ecran?: string;
+  adf?: number; // add this
+  clavier?: number;
+  souris?: string;
+  usb?: string;
+  accessoire?: string;
+  notes?: string;
   SousCategorie?: SousCategorie;
 }
 
+export interface User {
+  id: string;
+  fullname: string;
+  email?: string;
+  tel?: string;
+  service: string;
+  bloc: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+interface PdfGeneratorProps {
+  user: User;
+  materials: Material[];
+}
 export function UserManagement() {
   const API_BASE = process.env.NEXT_PUBLIC_API_PORT_URL;
 
@@ -189,7 +213,9 @@ export function UserManagement() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [materials, setMaterials] = useState<Material[]>([]);
   const [isMaterialsDialogOpen, setIsMaterialsDialogOpen] = useState(false);
-  const [selectedMaterial, setSelectedMaterial] = useState(null);
+  const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(
+    null
+  );
   const [currentPage, setCurrentPage] = useState(1);
   // Pagination state and handlers
 
@@ -375,15 +401,18 @@ export function UserManagement() {
   };
 
   // Function to filter only non-empty fields
-  const getFilteredDetails = (material) => {
+  const getFilteredDetails = (material: Material) => {
     return Object.entries(fieldLabels)
       .filter(([key]) => {
-        const value = material[key];
+        const value = material[key as keyof Material];
         return (
           value !== null && value !== "" && value !== undefined && value !== 0
         );
       })
-      .map(([key, label]) => ({ label, value: material[key] }));
+      .map(([key, label]) => ({
+        label,
+        value: material[key as keyof Material],
+      }));
   };
 
   return (
@@ -1147,7 +1176,12 @@ export function UserManagement() {
                                 {item.label}
                               </span>
                               <span className="text-slate-600">
-                                {item.value}
+                                {typeof item.value === "object" &&
+                                item.value !== null
+                                  ? "nom" in item.value
+                                    ? item.value.nom // if SousCategorie or Categorie
+                                    : JSON.stringify(item.value) // fallback for unknown objects
+                                  : item.value || "-"}
                               </span>
                             </div>
                           )
@@ -1159,10 +1193,13 @@ export function UserManagement() {
 
                 <DialogFooter className="px-6 py-4 border-t bg-slate-50/50">
                   <div className="flex w-full justify-between items-center">
-                    <Button variant="outline" className="gap-2">
-                      <Download className="h-4 w-4" />
-                      Export List
-                    </Button>
+                    {selectedUser && (
+                      <PdfDownloadButton
+                        materials={materials}
+                        user={selectedUser}
+                      />
+                    )}
+
                     <Button
                       onClick={() => setIsMaterialsDialogOpen(false)}
                       className="bg-blue-600 hover:bg-blue-700"
