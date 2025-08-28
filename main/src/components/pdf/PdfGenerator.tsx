@@ -154,24 +154,27 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   materialSpecs: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginTop: 5,
+    flexDirection: "column",
+    gap: 4,
   },
   specItem: {
     flexDirection: "row",
-    marginRight: 10,
-    marginBottom: 3,
   },
   specLabel: {
     fontSize: 8,
     color: "#6B7280",
-    marginRight: 3,
+    marginRight: 4,
+    fontWeight: 500,
   },
   specValue: {
     fontSize: 8,
     color: "#374151",
-    fontWeight: 500,
+    fontWeight: 400,
+  },
+  emptySpec: {
+    fontSize: 8,
+    color: "#9CA3AF",
+    fontStyle: "italic",
   },
 });
 
@@ -181,6 +184,23 @@ const formatDate = (dateString: string) => {
     month: "long",
     day: "numeric",
   });
+};
+
+// Helper function to check if a value is empty or zero
+const hasValue = (value: any): boolean => {
+  if (value === null || value === undefined) return false;
+  if (typeof value === "string") return value.trim() !== "";
+  if (typeof value === "number") return value !== 0;
+  return true;
+};
+interface Specification {
+  label: string;
+  value: string;
+}
+
+type Accessory = {
+  label: string;
+  value: string | number | undefined;
 };
 
 const PdfGenerator = ({
@@ -248,87 +268,100 @@ const PdfGenerator = ({
             </View>
 
             {/* Table Rows */}
-            {materials.map((mat) => (
-              <View style={styles.tableRow} key={mat.id}>
-                <Text style={styles.tableCol}>{mat.codebar || "N/A"}</Text>
-                <Text style={styles.tableCol}>{mat.marque || "N/A"}</Text>
-                <View style={styles.tableCol}>
-                  <View style={styles.materialSpecs}>
-                    <View style={styles.specItem}>
-                      <Text style={styles.specLabel}>CPU:</Text>
-                      <Text style={styles.specValue}>
-                        {mat.cpu} ({mat.Ncpu || "N/A"})
-                      </Text>
+            {materials.map((mat) => {
+              // Collect specifications that have values
+              const specifications: Specification[] = [
+                hasValue(mat.cpu) && {
+                  label: "CPU:",
+                  value: `${mat.cpu}${
+                    hasValue(mat.Ncpu) ? ` (${mat.Ncpu} cores)` : ""
+                  }`,
+                },
+                hasValue(mat.ram) && {
+                  label: "RAM:",
+                  value: `${mat.ram}${
+                    hasValue(mat.Nram) ? ` (${mat.Nram} GB)` : ""
+                  }`,
+                },
+                hasValue(mat.disk) && {
+                  label: "Disk:",
+                  value: `${mat.disk}${
+                    hasValue(mat.Ndisk) ? ` (${mat.Ndisk} GB)` : ""
+                  }`,
+                },
+                hasValue(mat.ecran) && {
+                  label: "Screen:",
+                  value: mat.ecran,
+                },
+              ].filter(Boolean) as Specification[];
+
+              // Collect accessories that have values
+              const accessories: Accessory[] = [
+                hasValue(mat.adf)
+                  ? { label: "ADF:", value: mat.adf as string | number }
+                  : null,
+                hasValue(mat.clavier)
+                  ? {
+                      label: "Keyboard:",
+                      value: mat.clavier as string | number,
+                    }
+                  : null,
+                hasValue(mat.souris)
+                  ? { label: "Mouse:", value: mat.souris as string | number }
+                  : null,
+                hasValue(mat.usb)
+                  ? { label: "USB:", value: mat.usb as string | number }
+                  : null,
+                hasValue(mat.accessoire)
+                  ? {
+                      label: "Accessories:",
+                      value: mat.accessoire as string | number,
+                    }
+                  : null,
+                hasValue(mat.notes)
+                  ? { label: "Notes:", value: mat.notes as string | number }
+                  : null,
+              ].filter((item): item is Accessory => item !== null);
+
+              return (
+                <View style={styles.tableRow} key={mat.id}>
+                  <Text style={styles.tableCol}>{mat.codebar || "N/A"}</Text>
+                  <Text style={styles.tableCol}>{mat.marque || "N/A"}</Text>
+
+                  {/* Specifications Column */}
+                  <View style={styles.tableCol}>
+                    <View style={styles.materialSpecs}>
+                      {specifications.length > 0 ? (
+                        specifications.map((spec, index) => (
+                          <View style={styles.specItem} key={index}>
+                            <Text style={styles.specLabel}>{spec.label}</Text>
+                            <Text style={styles.specValue}>{spec.value}</Text>
+                          </View>
+                        ))
+                      ) : (
+                        <Text style={styles.emptySpec}>No specifications</Text>
+                      )}
                     </View>
-                    <View style={styles.specItem}>
-                      <Text style={styles.specLabel}>RAM:</Text>
-                      <Text style={styles.specValue}>
-                        {mat.ram} ({mat.Nram || "N/A"}GB)
-                      </Text>
+                  </View>
+
+                  {/* Accessories Column */}
+                  <View style={styles.tableCol}>
+                    <View style={styles.materialSpecs}>
+                      {accessories.length > 0 ? (
+                        accessories.map((acc, index) => (
+                          <View style={styles.specItem} key={index}>
+                            <Text style={styles.specLabel}>{acc.label}</Text>
+                            <Text style={styles.specValue}>{acc.value}</Text>
+                          </View>
+                        ))
+                      ) : (
+                        <Text style={styles.emptySpec}>No accessories</Text>
+                      )}
                     </View>
-                    <View style={styles.specItem}>
-                      <Text style={styles.specLabel}>Disk:</Text>
-                      <Text style={styles.specValue}>
-                        {mat.disk} ({mat.Ndisk || "N/A"}GB)
-                      </Text>
-                    </View>
-                    {mat.ecran && (
-                      <View style={styles.specItem}>
-                        <Text style={styles.specLabel}>Screen:</Text>
-                        <Text style={styles.specValue}>
-                          {mat.ecran || "N/A"}
-                        </Text>
-                      </View>
-                    )}
                   </View>
                 </View>
-                <View style={styles.tableCol}>
-                  <View style={styles.materialSpecs}>
-                    {(mat.adf ?? 0) > 0 && (
-                      <View style={styles.specItem}>
-                        <Text style={styles.specLabel}>ADF:</Text>
-                        <Text style={styles.specValue}>{mat.adf ?? "N/A"}</Text>
-                      </View>
-                    )}
-
-                    {(mat.clavier ?? 0) > 0 && (
-                      <View style={styles.specItem}>
-                        <Text style={styles.specLabel}>Keyboard:</Text>
-                        <Text style={styles.specValue}>
-                          {mat.clavier ?? "N/A"}
-                        </Text>
-                      </View>
-                    )}
-
-                    {mat.souris && (
-                      <View style={styles.specItem}>
-                        <Text style={styles.specLabel}>Mouse:</Text>
-                        <Text style={styles.specValue}>
-                          {mat.souris || "N/A"}
-                        </Text>
-                      </View>
-                    )}
-
-                    {mat.accessoire && (
-                      <View style={styles.specItem}>
-                        <Text style={styles.specLabel}>Accessories:</Text>
-                        <Text style={styles.specValue}>
-                          {mat.accessoire || "N/A"}
-                        </Text>
-                      </View>
-                    )}
-                    {mat.notes && (
-                      <View style={styles.specItem}>
-                        <Text style={styles.specLabel}>Notes:</Text>
-                        <Text style={styles.specValue}>
-                          {mat.notes || "N/A"}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                </View>
-              </View>
-            ))}
+              );
+            })}
           </View>
         ) : (
           <Text

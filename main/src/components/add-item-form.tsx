@@ -286,9 +286,7 @@ export const AddItemForm: React.FC<AddItemFormProps> = ({
     try {
       const res = await fetch(`${API_BASE}/api/materials/create`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
         credentials: "include",
       });
