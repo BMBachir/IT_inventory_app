@@ -29,6 +29,7 @@ import {
   Check,
   ListIcon,
   Building2Icon,
+  DownloadCloud,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -72,6 +73,7 @@ import {
 } from "./ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import * as XLSX from "xlsx";
 
 export type Material = {
   id: number;
@@ -93,6 +95,8 @@ export type Material = {
   categorieId: number;
   createdAt: string;
   updatedAt: string;
+  accessoire: string;
+  notes: string;
   user?: {
     fullname?: string;
     service?: string;
@@ -131,7 +135,7 @@ function RecentItem() {
   );
   const [open, setOpen] = useState(false);
 
-  const itemsPerPage = 10;
+  const itemsPerPage = 80;
   const pageWindowSize = 5;
 
   const fetchData = async () => {
@@ -548,6 +552,64 @@ function RecentItem() {
     }
   };
 
+  const handleDownloadExcel = () => {
+    // Get selected items
+    const selectedItems = currentData.filter((item) =>
+      selectedItemIds.has(item.id)
+    );
+
+    if (selectedItems.length === 0) {
+      alert("Veuillez sélectionner au moins un élément.");
+      return;
+    }
+
+    // Map table columns
+    const dataForExcel = selectedItems.map((item) => ({
+      ID: item.id,
+      "Utilisateur Nom Complet": item.user?.fullname || "",
+      "Utilisateur Service": item.user?.service || "",
+      Codebar: item.codebar,
+      Marque: item.marque,
+      CPU: item.cpu,
+      RAM: item.ram,
+      Disque: item.disk,
+      "Nombre CPU": item.Ncpu,
+      "Nombre RAM": item.Nram,
+      "Nombre Disque": item.Ndisk,
+      Écran: item.ecran,
+      ADF: item.adf,
+      Clavier: item.clavier,
+      Souris: item.souris,
+      USB: item.usb,
+      UtilisateurID: item.userId,
+      CatégorieID: item.categorieId,
+      "Sous-CatégorieID": item.sousCategorieId,
+      Notes: item.notes,
+      Accessoire: item.accessoire,
+      Créé_le: item.createdAt,
+      Modifié_le: item.updatedAt,
+    }));
+
+    // Create worksheet
+    const worksheet = XLSX.utils.json_to_sheet(dataForExcel);
+
+    // Auto-size columns
+    const colWidths = Object.keys(dataForExcel[0]).map((key) => ({
+      wch: Math.max(
+        key.length,
+        ...dataForExcel.map((row) => String(row[key] || "").length)
+      ),
+    }));
+    worksheet["!cols"] = colWidths;
+
+    // Create workbook
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Matériels");
+
+    // Export Excel file
+    XLSX.writeFile(workbook, "materiels.xlsx");
+  };
+
   return (
     <Card>
       <CardHeader className="bg-gradient-to-r from-gray-50 to-white p-6 border-b border-gray-200">
@@ -577,7 +639,7 @@ function RecentItem() {
             </div>
           </div>
 
-          <div className="relative max-w-sm w-full">
+          <div className="relative ">
             <Input
               placeholder="Filter by marque, user, service, CPU, RAM, disk, screen, category, subcategory..."
               value={searchTerm}
@@ -712,22 +774,6 @@ function RecentItem() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button
-                onClick={() => setOpen(true)}
-                variant="outline"
-                className="flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4 text-blue-600" />
-                Materials
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[900px] max-h-[100vh] overflow-y-auto">
-              <AddItemForm onAdded={fetchData} onClose={() => setOpen(false)} />
-            </DialogContent>
-          </Dialog>
-
           <Button
             variant={selectedItemIds.size > 0 ? "default" : "outline"}
             className={`flex items-center gap-2 transition-all ${
@@ -757,6 +803,51 @@ function RecentItem() {
               )}
             </span>
           </Button>
+          <Button
+            variant={selectedItemIds.size > 0 ? "default" : "outline"}
+            className={`flex items-center gap-2 transition-all ${
+              selectedItemIds.size > 0
+                ? "bg-green-600 hover:bg-green-700 text-white shadow-sm"
+                : "border-gray-300 bg-white hover:bg-gray-50 text-green-800"
+            }`}
+            onClick={handleDownloadExcel}
+            disabled={selectedItemIds.size === 0}
+            title={
+              selectedItemIds.size > 0
+                ? `Télécharger ${selectedItemIds.size} éléments sélectionnés`
+                : "Aucun élément sélectionné"
+            }
+          >
+            <DownloadCloud
+              className={`h-4 w-4 ${
+                selectedItemIds.size > 0 ? "text-white" : "text-green-600"
+              }`}
+            />
+            <span>
+              Télécharger Excel
+              {selectedItemIds.size > 0 && (
+                <span className="ml-1.5 inline-flex items-center justify-center h-5 w-5 rounded-full bg-green-100 text-green-800 text-xs font-medium">
+                  {selectedItemIds.size}
+                </span>
+              )}
+            </span>
+          </Button>
+
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button
+                onClick={() => setOpen(true)}
+                variant="outline"
+                className="flex items-center gap-2 text-blue-600"
+              >
+                <Plus className="h-4 w-4 " />
+                Materials
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[900px] max-h-[100vh] overflow-y-auto">
+              <AddItemForm onAdded={fetchData} onClose={() => setOpen(false)} />
+            </DialogContent>
+          </Dialog>
         </div>
       </CardHeader>
 
@@ -793,8 +884,6 @@ function RecentItem() {
                 className="flex items-start justify-start"
               />{" "}
               <div className="flex-1 ml-4">
-                <div className=""></div>
-
                 <div className="font-medium font-heading">{item.marque}</div>
                 <div className="text-sm text-gray-600 font-body">
                   {item.SousCategorie?.categorie?.nom} &gt;{" "}

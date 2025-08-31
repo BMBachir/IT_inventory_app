@@ -219,7 +219,7 @@ export function UserManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   // Pagination state and handlers
 
-  const itemsPerPage = 10;
+  const itemsPerPage = 80;
   const pageRange = 5;
 
   const form = useForm<UserFormData>({
