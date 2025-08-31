@@ -4,7 +4,7 @@ const ActionHistory = require("../models/actionHistory");
 exports.createMaterial = async (req, res) => {
   try {
     const { userId, sousCategorieId, ...rest } = req.body;
-    console.log(sousCategorieId);
+
     // Fetch user and sousCategorie
     const user = await User.findByPk(userId);
     const sousCategorie = await SousCategorie.findOne({
@@ -17,19 +17,33 @@ exports.createMaterial = async (req, res) => {
         .json({ message: "User or SousCategorie not found." });
     }
 
-    console.log("the sous cqtegorie code ", sousCategorieId);
-    console.log("the sous cqtegorie result ", sousCategorie);
-
-    const materialCount = await Material.count({
-      where: {
-        sousCategorieId,
-      },
+    // Get all codebars for this sousCategorieId
+    const materials = await Material.findAll({
+      where: { sousCategorieId },
+      attributes: ["codebar"],
     });
 
-    console.log("nbr of material with  sous categories ", materialCount);
+    // Extract the numeric parts (last 4 digits)
+    const numbers = materials
+      .map((m) => {
+        const match = m.codebar.match(/(\d{4})$/);
+        return match ? parseInt(match[1], 10) : null;
+      })
+      .filter((n) => n !== null)
+      .sort((a, b) => a - b);
 
-    const counter = String(materialCount + 1).padStart(4, "0");
-    console.log("counter is ", counter);
+    let nextNumber = 1;
+    for (let i = 0; i < numbers.length; i++) {
+      if (numbers[i] !== i + 1) {
+        nextNumber = i + 1;
+        break;
+      }
+    }
+    if (nextNumber === 1 && numbers.length > 0) {
+      nextNumber = numbers[numbers.length - 1] + 1;
+    }
+
+    const counter = String(nextNumber).padStart(4, "0");
     const codebar = `B${user.bloc}-${user.service}-${sousCategorie.code}-${counter}`;
 
     const newMaterial = await Material.create({
@@ -208,6 +222,39 @@ exports.getAllMaterials = async (req, res) => {
     res.status(200).json(materials);
   } catch (error) {
     console.error("Error fetching materials:", error);
+    res.status(500).json({ message: "Failed to retrieve materials" });
+  }
+};
+exports.getMaterialsByUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const materials = await Material.findAll({
+      where: { userId },
+      include: [
+        {
+          model: User,
+          attributes: ["id", "fullname", "email", "service", "bloc"],
+        },
+        {
+          model: SousCategorie,
+          as: "SousCategorie",
+          attributes: ["code", "nom"],
+          include: [
+            {
+              model: Categorie,
+              as: "categorie",
+              attributes: ["code", "nom"],
+            },
+          ],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    res.status(200).json(materials);
+  } catch (error) {
+    console.error("Error fetching materials for user:", error);
     res.status(500).json({ message: "Failed to retrieve materials" });
   }
 };

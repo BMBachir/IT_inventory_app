@@ -782,7 +782,7 @@ function RecentItem() {
           {currentData.map((item) => (
             <div
               key={item.id}
-              className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+              className="flex flex-col md:flex-row items-start justify-start md:items-center md:justify-between p-4 bg-gray-50 rounded-lg"
             >
               <Checkbox
                 checked={selectedItemIds.has(item.id)}
@@ -790,14 +790,16 @@ function RecentItem() {
                   handleSelectItem(item.id, isChecked as boolean)
                 }
                 aria-label={`Sélectionner ${item.marque}`}
-              />
+                className="flex items-start justify-start"
+              />{" "}
               <div className="flex-1 ml-4">
+                <div className=""></div>
+
                 <div className="font-medium font-heading">{item.marque}</div>
                 <div className="text-sm text-gray-600 font-body">
                   {item.SousCategorie?.categorie?.nom} &gt;{" "}
                   {item.SousCategorie?.nom}
                 </div>
-
                 {/* User Badges */}
                 <div className="flex flex-wrap gap-2 pl-11">
                   {item.user?.fullname && (
@@ -814,7 +816,6 @@ function RecentItem() {
                   )}
                 </div>
               </div>
-
               {/* Actions */}
               <div className="flex items-center gap-2 mt-3 sm:mt-0">
                 <Badge variant="secondary" className="font-mono text-xs">

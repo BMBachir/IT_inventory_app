@@ -1,3 +1,5 @@
+"use client";
+
 import { ScannerPage } from "@/components/barcode-scanner";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import React from "react";

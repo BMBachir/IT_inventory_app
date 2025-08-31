@@ -68,6 +68,8 @@ type Material = {
   clavier: number;
   souris: number;
   usb: number;
+  accessoire: string; // added
+  notes: string; // added
   userId: number;
   sousCategorieId: string;
   categorieId: string | null;
@@ -118,6 +120,7 @@ export function ScannerPage() {
 
     return () => clearTimeout(delayDebounce);
   }, [codeInput]);
+
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       {/* Header */}
@@ -490,7 +493,9 @@ export function ScannerPage() {
                 {/* Peripheral Section */}
                 {(material.clavier > 0 ||
                   material.souris > 0 ||
-                  material.usb > 0) && (
+                  material.usb > 0 ||
+                  (material.accessoire && material.accessoire.trim() !== "") ||
+                  (material.notes && material.notes.trim() !== "")) && (
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
                       <div className="bg-amber-100 p-2 rounded-lg">
@@ -501,44 +506,62 @@ export function ScannerPage() {
                       </h4>
                     </div>
 
-                    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {material.clavier > 0 && (
-                          <div className="space-y-1">
-                            <Label className="text-xs uppercase tracking-wider text-gray-500">
-                              Keyboard
-                            </Label>
-                            <div className="flex items-center gap-2">
-                              <Keyboard className="h-4 w-4 text-gray-500" />
-                              <p className="font-medium">{material.clavier}</p>
-                            </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {material.clavier > 0 && (
+                        <div className="space-y-1">
+                          <Label className="text-xs uppercase tracking-wider text-gray-500">
+                            Keyboard
+                          </Label>
+                          <div className="flex items-center gap-2">
+                            <Keyboard className="h-4 w-4 text-gray-500" />
+                            <p className="font-medium">{material.clavier}</p>
                           </div>
-                        )}
+                        </div>
+                      )}
 
-                        {material.souris > 0 && (
-                          <div className="space-y-1">
-                            <Label className="text-xs uppercase tracking-wider text-gray-500">
-                              Mouse
-                            </Label>
-                            <div className="flex items-center gap-2">
-                              <Mouse className="h-4 w-4 text-gray-500" />
-                              <p className="font-medium">{material.souris}</p>
-                            </div>
+                      {material.souris > 0 && (
+                        <div className="space-y-1">
+                          <Label className="text-xs uppercase tracking-wider text-gray-500">
+                            Mouse
+                          </Label>
+                          <div className="flex items-center gap-2">
+                            <Mouse className="h-4 w-4 text-gray-500" />
+                            <p className="font-medium">{material.souris}</p>
                           </div>
-                        )}
+                        </div>
+                      )}
 
-                        {material.usb > 0 && (
-                          <div className="space-y-1">
-                            <Label className="text-xs uppercase tracking-wider text-gray-500">
-                              USB
-                            </Label>
-                            <div className="flex items-center gap-2">
-                              <Usb className="h-4 w-4 text-gray-500" />
-                              <p className="font-medium">{material.usb}</p>
-                            </div>
+                      {material.accessoire?.trim() && (
+                        <div className="space-y-1">
+                          <Label className="text-xs uppercase tracking-wider text-gray-500">
+                            Accessoire
+                          </Label>
+                          <div className="flex flex-col gap-1">
+                            {material.accessoire
+                              .split(";")
+                              .map((item, index) => (
+                                <p key={index} className="font-medium">
+                                  {item.trim()}
+                                </p>
+                              ))}
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
+
+                      {material.notes?.trim() && (
+                        <div className="space-y-1">
+                          <Label className="text-xs uppercase tracking-wider text-gray-500">
+                            Notes
+                          </Label>
+                          <div className="flex flex-col gap-1">
+                            {material.notes.split(";").map((item, index) => (
+                              <p key={index} className="font-medium">
+                                {item.trim()}
+                              </p>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

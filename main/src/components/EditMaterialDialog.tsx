@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { Textarea } from "./ui/textarea";
 
 type Specifications = {
   cpu: string;
@@ -30,6 +31,8 @@ type Specifications = {
   clavier: string | null;
   souris: string | null;
   usb: string | null;
+  accessoire: string | null; // New field
+  notes: string | null; // New field
   [key: string]: string | number | null;
 };
 
@@ -77,12 +80,13 @@ export default function EditMaterialDialog({
       clavier: null,
       souris: null,
       usb: null,
+      accessoire: null, // added here
+      notes: null, // added here
     },
   });
 
   useEffect(() => {
     if (material) {
-      console.log("users", users);
       setFormData({
         marque: material.marque || "",
         selectedUserId: material.userId?.toString() || null,
@@ -100,6 +104,8 @@ export default function EditMaterialDialog({
           clavier: material.clavier ?? null,
           souris: material.souris ?? null,
           usb: material.usb ?? null,
+          accessoire: material.accessoire ?? null, // added here
+          notes: material.notes ?? null, // added here
         },
       });
     }
@@ -165,7 +171,7 @@ export default function EditMaterialDialog({
     { id: "adf", name: "ADF", type: "boolean" },
     { id: "clavier", name: "Clavier", type: "number", placeholder: "1" },
     { id: "souris", name: "Souris", type: "number", placeholder: "1" },
-    { id: "usb", name: "Ports USB", type: "number", placeholder: "4" },
+    // { id: "usb", name: "Ports USB", type: "number", placeholder: "4" },
   ];
 
   return (
@@ -359,6 +365,31 @@ export default function EditMaterialDialog({
                 );
               })}
             </div>
+          </div>
+          {/* Accessoires */}
+          <div className="space-y-1">
+            <Label className="text-sm font-medium text-gray-700">
+              Accessoires
+            </Label>
+            <Textarea
+              placeholder="Liste des accessoires..."
+              value={formData.specifications.accessoire || ""}
+              onChange={(e) =>
+                handleSpecificationChange("accessoire", e.target.value)
+              }
+            />
+          </div>
+
+          {/* Notes */}
+          <div className="space-y-1">
+            <Label className="text-sm font-medium text-gray-700">Notes</Label>
+            <Textarea
+              placeholder="Ajouter des notes..."
+              value={formData.specifications.notes || ""}
+              onChange={(e) =>
+                handleSpecificationChange("notes", e.target.value)
+              }
+            />
           </div>
 
           <div className="flex justify-end space-x-4">

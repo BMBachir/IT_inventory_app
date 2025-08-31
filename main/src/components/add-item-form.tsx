@@ -39,6 +39,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Textarea } from "./ui/textarea";
 
 // Définir les types pour les catégories et sous-catégories venant de l'API
 interface Category {
@@ -110,6 +111,8 @@ export const AddItemForm: React.FC<AddItemFormProps> = ({
       clavier: null as number | null,
       souris: "",
       usb: "",
+      accessoire: "",
+      notes: "",
     },
   });
 
@@ -150,7 +153,7 @@ export const AddItemForm: React.FC<AddItemFormProps> = ({
     },
     { id: "clavier", name: "Clavier", type: "number", placeholder: "e.g., 1" },
     { id: "souris", name: "Souris", type: "text", placeholder: "e.g., 1" },
-    { id: "usb", name: "Ports USB", type: "text", placeholder: "e.g., 4" },
+    //{ id: "usb", name: "Ports USB", type: "text", placeholder: "e.g., 4" },
   ];
 
   // Fetch data from APIs on component mount
@@ -262,7 +265,7 @@ export const AddItemForm: React.FC<AddItemFormProps> = ({
     // Construct the payload to match the 'material' table schema
     const payload = {
       marque: formData.marque,
-      cpu: formData.specifications.cpu || null, // Ensure empty strings are sent as null for varchar
+      cpu: formData.specifications.cpu || null,
       ram: formData.specifications.ram || null,
       disk: formData.specifications.disk || null,
       Ncpu: formData.specifications.ncpu,
@@ -273,6 +276,8 @@ export const AddItemForm: React.FC<AddItemFormProps> = ({
       clavier: formData.specifications.clavier,
       souris: formData.specifications.souris,
       usb: formData.specifications.usb,
+      accessoire: formData.specifications.accessoire || null,
+      notes: formData.specifications.notes || null,
       userId: Number(formData.selectedUserId),
       sousCategorieId: selectedSubcategory || null,
       categorieId: selectedCategory,
@@ -281,9 +286,7 @@ export const AddItemForm: React.FC<AddItemFormProps> = ({
     try {
       const res = await fetch(`${API_BASE}/api/materials/create`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
         credentials: "include",
       });
@@ -308,6 +311,8 @@ export const AddItemForm: React.FC<AddItemFormProps> = ({
           clavier: null,
           souris: "",
           usb: "",
+          accessoire: "",
+          notes: "",
         },
       });
 
@@ -319,7 +324,7 @@ export const AddItemForm: React.FC<AddItemFormProps> = ({
       console.error("Error creating asset:", error);
     }
   };
-
+  console.log("accessoire", formData.specifications);
   return (
     <form onSubmit={handleSubmit}>
       <div className="max-w-4xl mx-auto space-y-6">
@@ -554,12 +559,69 @@ export const AddItemForm: React.FC<AddItemFormProps> = ({
             </div>
 
             <Separator />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Accessoires */}
+              <div className="space-y-1">
+                <Label className="text-sm font-medium text-gray-700">
+                  Accessoires
+                </Label>
+                <Textarea
+                  placeholder="Liste des accessoires..."
+                  value={formData.specifications.accessoire || ""}
+                  onChange={(e) =>
+                    handleSpecificationChange("accessoire", e.target.value)
+                  }
+                />
+              </div>
 
+              {/* Notes */}
+              <div className="space-y-1">
+                <Label className="text-sm font-medium text-gray-700">
+                  Notes
+                </Label>
+                <Textarea
+                  placeholder="Ajouter des notes..."
+                  value={formData.specifications.notes || ""}
+                  onChange={(e) =>
+                    handleSpecificationChange("notes", e.target.value)
+                  }
+                />
+              </div>
+            </div>
             {/* Action Buttons */}
             <div className="flex justify-end space-x-4">
-              <Button variant="outline" type="button">
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => {
+                  setFormData({
+                    marque: "",
+                    selectedUserId: "",
+                    specifications: {
+                      cpu: "",
+                      ram: "",
+                      disk: "",
+                      ncpu: null,
+                      nram: null,
+                      ndisk: null,
+                      ecran: "",
+                      adf: null,
+                      clavier: null,
+                      souris: "",
+                      usb: "",
+                      accessoire: "",
+                      notes: "",
+                    },
+                  });
+                  setSelectedCategory(null);
+                  setSelectedSubcategory(null);
+
+                  if (onClose) onClose(); // close dialog if parent provides it
+                }}
+              >
                 Cancel
               </Button>
+
               <Button type="submit">Add Asset</Button>
             </div>
           </CardContent>
