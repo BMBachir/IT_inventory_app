@@ -4,6 +4,8 @@ const SousCategorie = require("./sousCategorie");
 const Material = require("./material");
 const User = require("./user"); // employee
 const AuthUser = require("./auth"); // login
+const ActionHistory = require("./actionHistory");
+const Auth = require("./auth");
 
 // Define Associations
 
@@ -34,6 +36,8 @@ Material.belongsTo(SousCategorie, {
   targetKey: "code",
   as: "SousCategorie",
 });
+ActionHistory.belongsTo(Auth, { foreignKey: "userId", as: "admin" });
+Auth.hasMany(ActionHistory, { foreignKey: "userId", as: "histories" });
 
 const models = {
   db,
@@ -42,6 +46,7 @@ const models = {
   Categorie,
   SousCategorie,
   Material,
+  ActionHistory,
 };
 
 // Sync database

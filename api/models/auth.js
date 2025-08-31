@@ -2,6 +2,11 @@ const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
 
 const Auth = sequelize.define("Auth", {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    allowNull: false,
+  },
   username: {
     type: DataTypes.STRING,
     allowNull: false,

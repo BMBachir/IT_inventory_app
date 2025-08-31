@@ -1,6 +1,6 @@
 const { Material, User, SousCategorie, Categorie } = require("../models");
 const ActionHistory = require("../models/actionHistory");
-
+const { Op } = require("sequelize");
 exports.createMaterial = async (req, res) => {
   try {
     const { userId, sousCategorieId, ...rest } = req.body;
@@ -90,7 +90,6 @@ exports.createMaterial = async (req, res) => {
   }
 };
 
-// 🔹 Update Material
 exports.updateMaterial = async (req, res) => {
   try {
     const { userId, sousCategorieId, ...rest } = req.body;
@@ -98,7 +97,9 @@ exports.updateMaterial = async (req, res) => {
     const material = await Material.findByPk(req.params.id);
     if (!material)
       return res.status(404).json({ message: "Material not found" });
+
     const oldValues = material.toJSON();
+
     let user = null;
     if (userId) {
       user = await User.findByPk(userId);
@@ -114,13 +115,32 @@ exports.updateMaterial = async (req, res) => {
         return res.status(400).json({ message: "Sous-catégorie not found" });
     }
 
-    // Get original counter from existing codebar
     let codebar = material.codebar;
-    if (user && sousCategorie && material.codebar) {
-      const parts = material.codebar.split("-");
-      const counter = parts[3];
+    const isSousCategorieChanged =
+      sousCategorieId && sousCategorieId !== material.sousCategorieId;
 
-      codebar = `B${user.bloc}-${user.service}-${sousCategorie.code}-${counter}`;
+    if (user && sousCategorie && isSousCategorieChanged) {
+      const prefix = `-${sousCategorie.code}-`;
+
+      const latestMaterial = await Material.findOne({
+        where: {
+          codebar: {
+            [Op.like]: `%${prefix}%`,
+          },
+        },
+        order: [["codebar", "DESC"]],
+      });
+
+      let counter = 1;
+      if (latestMaterial && latestMaterial.codebar) {
+        const parts = latestMaterial.codebar.split("-");
+        const lastCounter = parseInt(parts[3], 10);
+        counter = isNaN(lastCounter) ? 1 : lastCounter + 1;
+      }
+
+      codebar = `B${user.bloc}-${user.service}-${sousCategorie.code}-${String(
+        counter
+      ).padStart(4, "0")}`;
     }
 
     await material.update({ userId, sousCategorieId, codebar, ...rest });
