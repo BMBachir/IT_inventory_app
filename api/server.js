@@ -8,7 +8,8 @@ const sousCategorieRoutes = require("./routes/sousCategorieRoutes");
 const materialRoutes = require("./routes/materialRoutes");
 const userRoutes = require("./routes/userRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
-
+const cookieParser = require("cookie-parser");
+const HistoryRoutes = require("./routes/HistoryRoutes");
 require("./models");
 
 const app = express();
@@ -30,6 +31,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/sous-categories", sousCategorieRoutes);
 app.use("/api/materials", materialRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/history", HistoryRoutes);
 
 app.listen(port, "0.0.0.0", () => {
   console.log(`Server running on http://192.168.2.115:${port}`);
