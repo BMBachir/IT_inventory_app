@@ -7,7 +7,7 @@ const materialRoutes = require("./routes/materialRoutes");
 const userRoutes = require("./routes/userRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const cookieParser = require("cookie-parser");
-
+const HistoryRoutes = require("./routes/HistoryRoutes");
 require("./models");
 const app = express();
 const port = 5001;
@@ -27,6 +27,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/sous-categories", sousCategorieRoutes);
 app.use("/api/materials", materialRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/history", HistoryRoutes);
 
 app.listen(port, () => {
   console.log(`localhost:${port}`);

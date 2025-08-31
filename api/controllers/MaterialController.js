@@ -1,4 +1,5 @@
 const { Material, User, SousCategorie, Categorie } = require("../models");
+const ActionHistory = require("../models/actionHistory");
 
 exports.createMaterial = async (req, res) => {
   try {
@@ -38,6 +39,15 @@ exports.createMaterial = async (req, res) => {
       codebar,
     });
 
+    await ActionHistory.create({
+      entityType: "Material",
+      entityId: newMaterial.id,
+      userId: req.user.id,
+      actionType: "created",
+      fieldName: null,
+      oldValue: null,
+      newValue: null,
+    });
     const fullMaterial = await Material.findByPk(newMaterial.id, {
       include: [
         {
@@ -74,7 +84,7 @@ exports.updateMaterial = async (req, res) => {
     const material = await Material.findByPk(req.params.id);
     if (!material)
       return res.status(404).json({ message: "Material not found" });
-
+    const oldValues = material.toJSON();
     let user = null;
     if (userId) {
       user = await User.findByPk(userId);
@@ -100,6 +110,24 @@ exports.updateMaterial = async (req, res) => {
     }
 
     await material.update({ userId, sousCategorieId, codebar, ...rest });
+
+    const newValues = material.toJSON();
+
+    for (const key of Object.keys(newValues)) {
+      if (oldValues[key] !== newValues[key]) {
+        await ActionHistory.create({
+          entityType: "Material",
+          entityId: material.id,
+          userId: req.user.id,
+          actionType: "updated",
+          fieldName: key,
+          oldValue:
+            oldValues[key] !== undefined ? String(oldValues[key]) : null,
+          newValue:
+            newValues[key] !== undefined ? String(newValues[key]) : null,
+        });
+      }
+    }
 
     const updatedMaterial = await Material.findByPk(material.id, {
       include: [
@@ -137,6 +165,16 @@ exports.deleteMaterial = async (req, res) => {
       return res.status(404).json({ message: "Material not found" });
 
     await material.destroy();
+
+    await ActionHistory.create({
+      entityType: "Material",
+      entityId: Material.id,
+      userId: req.user.id,
+      actionType: "deleted",
+      fieldName: null,
+      oldValue: null,
+      newValue: null,
+    });
     res.status(200).json({ message: "Material deleted successfully." });
   } catch (error) {
     console.error("Delete error:", error);
