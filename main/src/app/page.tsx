@@ -7,6 +7,7 @@ import {
   UserPlus,
   Scan,
   LogIn,
+  History,
   Tags,
   LogOut,
   Server,
@@ -69,6 +70,15 @@ export default function Dashboard() {
 
               {/* Navigation Buttons */}
               <div className="flex flex-wrap gap-3">
+                <Link href="/history">
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-2 border-gray-200 bg-white/90 hover:bg-blue-50 hover:border-blue-200 shadow-xs backdrop-blur-sm"
+                  >
+                    <History className="h-4 w-4 text-blue-600" />
+                    <span className="text-gray-700">Action History</span>
+                  </Button>
+                </Link>
                 <Link href="/scanner">
                   <Button
                     variant="outline"
