@@ -135,7 +135,9 @@ function RecentItem() {
   );
   const [open, setOpen] = useState(false);
 
-  const itemsPerPage = 80;
+  const [itemsPerPage, setItemsPerPage] = useState(80);
+
+  const options = [20, 40, 80, 100, 200];
   const pageWindowSize = 5;
 
   const fetchData = async () => {
@@ -795,7 +797,7 @@ function RecentItem() {
               }`}
             />
             <span>
-              Print Selection
+              Print
               {selectedItemIds.size > 0 && (
                 <span className="ml-1.5 inline-flex items-center justify-center h-5 w-5 rounded-full bg-blue-100 text-blue-800 text-xs font-medium">
                   {selectedItemIds.size}
@@ -824,7 +826,7 @@ function RecentItem() {
               }`}
             />
             <span>
-              Télécharger Excel
+              Excel
               {selectedItemIds.size > 0 && (
                 <span className="ml-1.5 inline-flex items-center justify-center h-5 w-5 rounded-full bg-green-100 text-green-800 text-xs font-medium">
                   {selectedItemIds.size}
@@ -832,6 +834,31 @@ function RecentItem() {
               )}
             </span>
           </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="flex items-center gap-2 text-gray-700"
+              >
+                {itemsPerPage}
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              {options.map((option) => (
+                <DropdownMenuItem
+                  key={option}
+                  onClick={() => setItemsPerPage(option)}
+                  className={
+                    itemsPerPage === option ? "font-semibold text-blue-600" : ""
+                  }
+                >
+                  {option} items
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
