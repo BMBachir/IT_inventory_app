@@ -16,7 +16,7 @@ const port = 5001;
 app.use(cookieParser());
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://192.168.2.115:3000"],
+    origin: ["http://localhost:3000", "http://192.168.2.70:3000"],
     credentials: true,
   })
 );
@@ -32,5 +32,5 @@ app.use("/api/users", userRoutes);
 app.use("/api/history", HistoryRoutes);
 
 app.listen(port, "0.0.0.0", () => {
-  console.log(`Server running on http://192.168.2.115:${port}`);
+  console.log(`Server running on http://192.168.2.70:${port}`);
 });
