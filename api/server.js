@@ -1,7 +1,5 @@
 const express = require("express");
 const cors = require("cors");
-const cookieParser = require("cookie-parser");
-
 const categorieRoutes = require("./routes/categorieRoutes");
 const authRoutes = require("./routes/authRoutes");
 const sousCategorieRoutes = require("./routes/sousCategorieRoutes");

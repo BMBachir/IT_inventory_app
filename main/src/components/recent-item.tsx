@@ -358,17 +358,27 @@ function RecentItem() {
   ) => {
     const pageBreakClass = isFirst ? "" : "page-break-new-label";
 
-    const nameDisplay =
-      SousCategorie.toLowerCase() === "laptop"
-        ? `${SousCategorie}-${itemName}`
-        : `${SousCategorie}`;
+    let nameDisplay;
+
+    if (SousCategorie.toLowerCase() === "laptop") {
+      nameDisplay = `${SousCategorie}-${itemName}`;
+    } else if (SousCategorie.toLowerCase() === "ecran") {
+      const parts = itemName.split(" ");
+      const taillePouce = parts[2] ? `${parts[2]}″` : "";
+      nameDisplay = `${SousCategorie}-${parts[0] || ""} ${taillePouce}`;
+    } else if (SousCategorie.toLowerCase().startsWith("imprimante")) {
+      nameDisplay = `${SousCategorie}<br>${itemName}`;
+    } else {
+      nameDisplay = `${SousCategorie}`;
+    }
+
     return `
-      <div class="barcode-container ${pageBreakClass}">
-        <div class="category-name">${nameDisplay}</div>
-        <canvas id="barcodeCanvas-${barcodeValue}"></canvas>
-        <div class="barcode-value">${barcodeValue}</div>
-      </div>
-    `;
+  <div class="barcode-container ${pageBreakClass}">
+    <div class="category-name">${nameDisplay}</div>
+    <canvas id="barcodeCanvas-${barcodeValue}"></canvas>
+    <div class="barcode-value">${barcodeValue}</div>
+  </div>
+`;
   };
 
   const handlePrintBarcode = (
@@ -440,7 +450,10 @@ function RecentItem() {
       return;
     }
 
-    const selectedItems = mat.filter((item) => selectedItemIds.has(item.id));
+    const selectedItems = currentData.filter((item) =>
+      selectedItemIds.has(item.id)
+    );
+
     let allBarcodesHtml = "";
 
     selectedItems.forEach((item, index) => {

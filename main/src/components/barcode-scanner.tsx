@@ -44,6 +44,8 @@ import {
   ArrowLeft,
 } from "lucide-react";
 
+import BarcodeReader from "react-barcode-reader";
+
 type User = {
   id: number;
   fullname: string;
@@ -86,6 +88,7 @@ export function ScannerPage() {
   const [material, setMaterial] = useState<Material | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
 
   const fetchMaterial = async (code: string) => {
     if (!code.trim()) {
@@ -111,6 +114,7 @@ export function ScannerPage() {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     if (!codeInput) return;
 
@@ -120,6 +124,19 @@ export function ScannerPage() {
 
     return () => clearTimeout(delayDebounce);
   }, [codeInput]);
+
+  const handleScan = (data: string | null) => {
+    if (data) {
+      setCodeInput(data);
+      setIsScanning(false);
+    }
+  };
+
+  const handleError = (err: Error) => {
+    console.error("Scanning error:", err);
+    setError("Erreur lors du scan. Veuillez réessayer.");
+    setIsScanning(false);
+  };
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
@@ -190,20 +207,49 @@ export function ScannerPage() {
           </CardHeader>
 
           <CardContent className="p-6 space-y-6">
-            {/* Test Scanner Section */}
+            {/* Live Scanner Section */}
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <div className="bg-purple-100 p-2 rounded-lg">
-                  <TestTube2 className="h-5 w-5 text-purple-600" />
+                  <ScanLine className="h-5 w-5 text-purple-600" />
                 </div>
                 <h3 className="font-semibold text-lg text-gray-800">
-                  Quick Search
+                  Live Barcode Scanner
                 </h3>
               </div>
-
               <p className="text-sm text-gray-600">
-                Simulate scanning with the barcodes:
+                Use your camera to scan a barcode.
               </p>
+              <Button
+                onClick={() => setIsScanning(!isScanning)}
+                className="w-full"
+                variant={isScanning ? "destructive" : "default"}
+              >
+                {isScanning ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Scan className="h-4 w-4 mr-2" />
+                )}
+                {isScanning ? "Stop Scanning" : "Start Scanning"}
+              </Button>
+
+              {isScanning && (
+                <div className="bg-gray-100 rounded-lg p-2 mt-4 aspect-video flex items-center justify-center relative">
+                  <BarcodeReader
+                    onError={handleError}
+                    onScan={handleScan}
+                    legacyMode={true}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="border-2 border-dashed border-white w-3/4 h-1/2 rounded-md animate-pulse" />
+                  </div>
+                </div>
+              )}
+              {isScanning && (
+                <p className="mt-2 text-center text-sm text-blue-600">
+                  Align the barcode with the camera.
+                </p>
+              )}
             </div>
 
             <Separator className="my-4" />

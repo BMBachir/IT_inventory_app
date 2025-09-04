@@ -2,9 +2,8 @@
 
 export interface User {
   id: string;
-  fullname: string;
   employeeId: string;
-  name: string;
+  fullname: string;
   email: string;
   phoneNumber: string;
   service: string; // Department/Service

@@ -69,7 +69,7 @@ export default function Dashboard() {
               </div>
 
               {/* Navigation Buttons */}
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-3 justify-between">
                 <Link href="/history">
                   <Button
                     variant="outline"
