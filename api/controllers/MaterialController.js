@@ -95,15 +95,18 @@ exports.updateMaterial = async (req, res) => {
     const { userId, sousCategorieId, ...rest } = req.body;
 
     const material = await Material.findByPk(req.params.id);
-    if (!material)
+    if (!material) {
       return res.status(404).json({ message: "Material not found" });
+    }
 
     const oldValues = material.toJSON();
 
     let user = null;
     if (userId) {
       user = await User.findByPk(userId);
-      if (!user) return res.status(400).json({ message: "User not found" });
+      if (!user) {
+        return res.status(400).json({ message: "User not found" });
+      }
     }
 
     let sousCategorie = null;
@@ -111,8 +114,9 @@ exports.updateMaterial = async (req, res) => {
       sousCategorie = await SousCategorie.findOne({
         where: { code: sousCategorieId },
       });
-      if (!sousCategorie)
+      if (!sousCategorie) {
         return res.status(400).json({ message: "Sous-catégorie not found" });
+      }
     }
 
     let codebar = material.codebar;
@@ -120,27 +124,51 @@ exports.updateMaterial = async (req, res) => {
       sousCategorieId && sousCategorieId !== material.sousCategorieId;
 
     if (user && sousCategorie && isSousCategorieChanged) {
-      const prefix = `-${sousCategorie.code}-`;
+      const prefix = `B${user.bloc}-${user.service}-${sousCategorie.code}-`;
 
-      const latestMaterial = await Material.findOne({
+      // Find all existing codebars in the new sousCategorie
+      const allMaterialsInNewCategory = await Material.findAll({
         where: {
           codebar: {
-            [Op.like]: `%${prefix}%`,
+            [Op.like]: `${prefix}%`,
           },
         },
-        order: [["codebar", "DESC"]],
+        attributes: ["codebar"],
       });
 
-      let counter = 1;
-      if (latestMaterial && latestMaterial.codebar) {
-        const parts = latestMaterial.codebar.split("-");
-        const lastCounter = parseInt(parts[3], 10);
-        counter = isNaN(lastCounter) ? 1 : lastCounter + 1;
+      // Extract sequential numbers from the last 4 digits
+      const existingSequentials = [
+        ...new Set(
+          allMaterialsInNewCategory
+            .map((m) => {
+              const match = m.codebar?.match(/(\d{4})$/);
+              return match ? parseInt(match[1], 10) : null;
+            })
+            .filter((n) => n !== null)
+        ),
+      ].sort((a, b) => a - b);
+
+      let newSequential = 1;
+
+      if (existingSequentials.length > 0) {
+        newSequential = null;
+
+        // Look for the first missing gap
+        for (let i = 1; i < existingSequentials.length; i++) {
+          if (existingSequentials[i] !== existingSequentials[i - 1] + 1) {
+            newSequential = existingSequentials[i - 1] + 1;
+            break;
+          }
+        }
+
+        // If no gaps → biggest + 1
+        if (!newSequential) {
+          newSequential =
+            existingSequentials[existingSequentials.length - 1] + 1;
+        }
       }
 
-      codebar = `B${user.bloc}-${user.service}-${sousCategorie.code}-${String(
-        counter
-      ).padStart(4, "0")}`;
+      codebar = `${prefix}${String(newSequential).padStart(4, "0")}`;
     }
 
     await material.update({ userId, sousCategorieId, codebar, ...rest });
