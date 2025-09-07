@@ -85,7 +85,7 @@ exports.createMaterial = async (req, res) => {
 
     res.status(201).json(fullMaterial);
   } catch (error) {
-    console.error("Create error:", error);
+    //console.error("Create error:", error);
     res.status(500).json({ message: "Failed to create material." });
   }
 };
@@ -95,6 +95,7 @@ exports.updateMaterial = async (req, res) => {
     const { userId, sousCategorieId, ...rest } = req.body;
 
     const material = await Material.findByPk(req.params.id);
+    //console.log("material :", material);
     if (!material) {
       return res.status(404).json({ message: "Material not found" });
     }
@@ -118,25 +119,28 @@ exports.updateMaterial = async (req, res) => {
         return res.status(400).json({ message: "Sous-catégorie not found" });
       }
     }
+    //console.log("sousCategorie :", sousCategorie);
 
     let codebar = material.codebar;
     const isSousCategorieChanged =
       sousCategorieId && sousCategorieId !== material.sousCategorieId;
 
     if (user && sousCategorie && isSousCategorieChanged) {
-      const prefix = `B${user.bloc}-${user.service}-${sousCategorie.code}-`;
-
+      const prefix = `${sousCategorie.code}-`;
+      console.log("prefix :", prefix);
+      const bar = `${user.bloc}-${user.service}-${sousCategorie.code}-`;
       // Find all existing codebars in the new sousCategorie
       const allMaterialsInNewCategory = await Material.findAll({
         where: {
           codebar: {
-            [Op.like]: `${prefix}%`,
+            [Op.like]: `%${prefix}%`,
           },
         },
         attributes: ["codebar"],
       });
 
-      // Extract sequential numbers from the last 4 digits
+      console.log("all Materials In NewCategory :", allMaterialsInNewCategory);
+
       const existingSequentials = [
         ...new Set(
           allMaterialsInNewCategory
@@ -157,6 +161,7 @@ exports.updateMaterial = async (req, res) => {
         for (let i = 1; i < existingSequentials.length; i++) {
           if (existingSequentials[i] !== existingSequentials[i - 1] + 1) {
             newSequential = existingSequentials[i - 1] + 1;
+            //console.log("newSequential :", newSequential);
             break;
           }
         }
@@ -165,14 +170,15 @@ exports.updateMaterial = async (req, res) => {
         if (!newSequential) {
           newSequential =
             existingSequentials[existingSequentials.length - 1] + 1;
+          //console.log("new Sequential :", newSequential);
         }
       }
 
-      codebar = `${prefix}${String(newSequential).padStart(4, "0")}`;
+      codebar = `${bar}${String(newSequential).padStart(4, "0")}`;
     }
 
     await material.update({ userId, sousCategorieId, codebar, ...rest });
-
+    //console.log("updated material :", material);
     const newValues = material.toJSON();
 
     for (const key of Object.keys(newValues)) {
@@ -214,7 +220,7 @@ exports.updateMaterial = async (req, res) => {
 
     res.status(200).json(updatedMaterial);
   } catch (error) {
-    console.error("Update error:", error);
+    //console.error("Update error:", error);
     res.status(500).json({ message: "Failed to update material." });
   }
 };
@@ -239,7 +245,7 @@ exports.deleteMaterial = async (req, res) => {
     });
     res.status(200).json({ message: "Material deleted successfully." });
   } catch (error) {
-    console.error("Delete error:", error);
+    //console.error("Delete error:", error);
     res.status(500).json({ message: "Failed to delete material." });
   }
 };
@@ -269,7 +275,7 @@ exports.getAllMaterials = async (req, res) => {
 
     res.status(200).json(materials);
   } catch (error) {
-    console.error("Error fetching materials:", error);
+    //console.error("Error fetching materials:", error);
     res.status(500).json({ message: "Failed to retrieve materials" });
   }
 };
@@ -302,7 +308,7 @@ exports.getMaterialsByUser = async (req, res) => {
 
     res.status(200).json(materials);
   } catch (error) {
-    console.error("Error fetching materials for user:", error);
+    //console.error("Error fetching materials for user:", error);
     res.status(500).json({ message: "Failed to retrieve materials" });
   }
 };
@@ -311,7 +317,7 @@ exports.getMaterialsByUser = async (req, res) => {
 exports.getMaterialByCode = async (req, res) => {
   try {
     const codebar = req.params.codebar;
-    console.log(codebar);
+    //console.log(codebar);
     const material = await Material.findOne({
       where: { codebar },
       include: [
@@ -338,7 +344,7 @@ exports.getMaterialByCode = async (req, res) => {
 
     res.json(material);
   } catch (error) {
-    console.error("Fetch by code error:", error);
+    //console.error("Fetch by code error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
