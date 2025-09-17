@@ -10,7 +10,10 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
+  Activity,
   ArrowUp,
+  Box,
+  Camera,
   Compass,
   FolderOpen,
   FolderTree,
@@ -18,9 +21,12 @@ import {
   MapPin,
   Monitor,
   Package,
+  Phone,
   Plus,
+  Share2,
   Tags,
   Users,
+  Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "./ui/button";
@@ -57,6 +63,15 @@ function DataDashboard() {
 
   const [categoryStats, setCategoryStats] = useState<CategoryStat[]>([]);
 
+  const categoryIcons: Record<string, any> = {
+    Computer: Monitor,
+    Imagerie: Camera,
+    Monitoring: Activity,
+    Network: Share2,
+    Communication: Phone,
+    Energie: Zap,
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -66,16 +81,18 @@ function DataDashboard() {
         );
         const data = await res.json();
         console.log("data", data);
-        const mappedCategories = data.categoryMaterialCounts.map(
-          (cat: any) => ({
+
+        const mappedCategories = data.categoryMaterialCounts.map((cat: any) => {
+          const IconComponent = categoryIcons[cat.categoryName] || Box;
+          return {
             id: cat.categoryId,
             name: cat.categoryName,
             code: `${cat.categoryId}`,
             count: cat.materialsCount,
-            icon: Monitor,
+            icon: IconComponent,
             color: "bg-blue-500",
-          })
-        );
+          };
+        });
 
         setInventoryStats({
           totalItems: data.totalMaterials,

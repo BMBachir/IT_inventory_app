@@ -95,7 +95,7 @@ exports.updateMaterial = async (req, res) => {
     const { userId, sousCategorieId, ...rest } = req.body;
 
     const material = await Material.findByPk(req.params.id);
-    //console.log("material :", material);
+
     if (!material) {
       return res.status(404).json({ message: "Material not found" });
     }
@@ -105,6 +105,7 @@ exports.updateMaterial = async (req, res) => {
     let user = null;
     if (userId) {
       user = await User.findByPk(userId);
+
       if (!user) {
         return res.status(400).json({ message: "User not found" });
       }
@@ -119,7 +120,6 @@ exports.updateMaterial = async (req, res) => {
         return res.status(400).json({ message: "Sous-catégorie not found" });
       }
     }
-    //console.log("sousCategorie :", sousCategorie);
 
     let codebar = material.codebar;
     const isSousCategorieChanged =
@@ -127,8 +127,9 @@ exports.updateMaterial = async (req, res) => {
 
     if (user && sousCategorie && isSousCategorieChanged) {
       const prefix = `${sousCategorie.code}-`;
-      console.log("prefix :", prefix);
+
       const bar = `${user.bloc}-${user.service}-${sousCategorie.code}-`;
+
       // Find all existing codebars in the new sousCategorie
       const allMaterialsInNewCategory = await Material.findAll({
         where: {
@@ -138,8 +139,6 @@ exports.updateMaterial = async (req, res) => {
         },
         attributes: ["codebar"],
       });
-
-      console.log("all Materials In NewCategory :", allMaterialsInNewCategory);
 
       const existingSequentials = [
         ...new Set(
@@ -157,11 +156,10 @@ exports.updateMaterial = async (req, res) => {
       if (existingSequentials.length > 0) {
         newSequential = null;
 
-        // Look for the first missing gap
         for (let i = 1; i < existingSequentials.length; i++) {
           if (existingSequentials[i] !== existingSequentials[i - 1] + 1) {
             newSequential = existingSequentials[i - 1] + 1;
-            //console.log("newSequential :", newSequential);
+
             break;
           }
         }
@@ -170,15 +168,21 @@ exports.updateMaterial = async (req, res) => {
         if (!newSequential) {
           newSequential =
             existingSequentials[existingSequentials.length - 1] + 1;
-          //console.log("new Sequential :", newSequential);
         }
       }
 
-      codebar = `${bar}${String(newSequential).padStart(4, "0")}`;
+      codebar = `B${bar}${String(newSequential).padStart(4, "0")}`;
+    } else if (user && !isSousCategorieChanged) {
+      const match = material.codebar.match(/(\d{4})$/);
+      const seq = match ? match[1] : "0001";
+
+      const sousCode = sousCategorie?.code || material.sousCategorie.code;
+
+      codebar = `B${user.bloc}-${user.service}-${sousCode}-${seq}`;
     }
 
     await material.update({ userId, sousCategorieId, codebar, ...rest });
-    //console.log("updated material :", material);
+
     const newValues = material.toJSON();
 
     for (const key of Object.keys(newValues)) {
@@ -256,7 +260,7 @@ exports.getAllMaterials = async (req, res) => {
       include: [
         {
           model: User,
-          attributes: ["id", "fullname", "email", "service", "bloc"],
+          attributes: ["id", "fullname", "email", "service", "bloc", "tel"],
         },
         {
           model: SousCategorie,
@@ -308,7 +312,6 @@ exports.getMaterialsByUser = async (req, res) => {
 
     res.status(200).json(materials);
   } catch (error) {
-    //console.error("Error fetching materials for user:", error);
     res.status(500).json({ message: "Failed to retrieve materials" });
   }
 };
@@ -317,7 +320,7 @@ exports.getMaterialsByUser = async (req, res) => {
 exports.getMaterialByCode = async (req, res) => {
   try {
     const codebar = req.params.codebar;
-    //console.log(codebar);
+
     const material = await Material.findOne({
       where: { codebar },
       include: [

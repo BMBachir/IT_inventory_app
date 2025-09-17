@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Card,
   CardContent,
@@ -14,15 +14,9 @@ import {
   Plus,
   Printer,
   Edit3,
-  Trash2Icon,
-  MapPin,
-  Building2,
   Clock,
-  Package,
-  ChevronRight,
   User,
   Building,
-  LucideTrash2,
   Trash2,
   BriefcaseBusiness,
   List,
@@ -49,14 +43,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { AddItemForm } from "@/components/add-item-form";
 import EditMaterialDialog from "./EditMaterialDialog";
 import { toast } from "sonner";
@@ -74,6 +61,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import * as XLSX from "xlsx";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 export type Material = {
   id: number;
@@ -101,6 +89,7 @@ export type Material = {
     fullname?: string;
     service?: string;
     bloc?: string;
+    tel?: string;
   };
   SousCategorie?: {
     nom: string;
@@ -124,7 +113,7 @@ function RecentItem() {
   const [allUsers, setAllUsers] = useState([]);
   const [allCategories, setAllCategories] = useState([]);
   const [allSubcategories, setAllSubcategories] = useState([]);
-
+  const [tempSearch, setTempSearch] = useState("");
   const [editOpen, setEditOpen] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(
     null
@@ -134,10 +123,9 @@ function RecentItem() {
     new Set()
   );
   const [open, setOpen] = useState(false);
-
   const [itemsPerPage, setItemsPerPage] = useState(80);
 
-  const options = [20, 40, 80, 100, 200];
+  const options = [20, 40, 80, 100, 200, 400, 600];
   const pageWindowSize = 5;
 
   const fetchData = async () => {
@@ -226,6 +214,7 @@ function RecentItem() {
           item.user?.fullname +
           item.user?.service +
           item.user?.bloc +
+          item.user?.tel +
           item.cpu +
           item.ram +
           item.disk +
@@ -239,7 +228,7 @@ function RecentItem() {
 
     return matchService && matchBloc && matchSearch;
   });
-
+  console.log(filterData);
   const filteredData = [...filterData].sort((a, b) => {
     const nameA = a.user?.fullname || "";
     const nameB = b.user?.fullname || "";
@@ -625,6 +614,14 @@ function RecentItem() {
     XLSX.writeFile(workbook, "materiels.xlsx");
   };
 
+  const parentRef = useRef<HTMLDivElement | null>(null);
+
+  const rowVirtualizer = useVirtualizer({
+    count: currentData.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 140,
+  });
+
   return (
     <Card>
       <CardHeader className="bg-gradient-to-r from-gray-50 to-white p-6 border-b border-gray-200">
@@ -654,17 +651,27 @@ function RecentItem() {
             </div>
           </div>
 
-          <div className="relative ">
+          <div className="relative flex items-center justify-center gap-1">
             <Input
               placeholder="Filter by marque, user, service, CPU, RAM, disk, screen, category, subcategory..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
+              value={tempSearch}
+              onChange={(e) => setTempSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  setSearchTerm(tempSearch);
+                  setCurrentPage(1);
+                }
               }}
               className="pr-10"
             />
-            <Search className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 w-4 h-4" />
+            <Button
+              onClick={() => {
+                setSearchTerm(tempSearch);
+                setCurrentPage(1);
+              }}
+            >
+              <Search className="h-4 w-4" />
+            </Button>
           </div>
 
           <DropdownMenu>
@@ -910,120 +917,160 @@ function RecentItem() {
               </span>
             </div>
           </div>
-          {currentData.map((item) => (
+          <div
+            ref={parentRef}
+            style={{ height: "700px", overflow: "auto" }} // make it scrollable
+          >
             <div
-              key={item.id}
-              className="flex flex-col md:flex-row items-start justify-start md:items-center md:justify-between p-4 bg-gray-50 rounded-lg"
+              style={{
+                height: rowVirtualizer.getTotalSize(),
+                width: "100%",
+                position: "relative",
+              }}
             >
-              <Checkbox
-                checked={selectedItemIds.has(item.id)}
-                onCheckedChange={(isChecked) =>
-                  handleSelectItem(item.id, isChecked as boolean)
-                }
-                aria-label={`Sélectionner ${item.marque}`}
-                className="flex items-start justify-start"
-              />{" "}
-              <div className="flex-1 ml-4">
-                <div className="font-medium font-heading">{item.marque}</div>
-                <div className="text-sm text-gray-600 font-body">
-                  {item.SousCategorie?.categorie?.nom} &gt;{" "}
-                  {item.SousCategorie?.nom}
-                </div>
-                {/* User Badges */}
-                <div className="flex flex-wrap gap-2 pl-11">
-                  {item.user?.fullname && (
-                    <Badge variant="outline" className="text-xs bg-gray-50">
-                      <User className="h-3 w-3 mr-1 text-gray-600" />
-                      {item.user.fullname}
-                    </Badge>
-                  )}
-                  {item.user?.service && (
-                    <Badge variant="outline" className="text-xs bg-gray-50">
-                      <Building className="h-3 w-3 mr-1 text-gray-600" />
-                      {item.user.service}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-              {/* Actions */}
-              <div className="flex items-center gap-2 mt-3 sm:mt-0">
-                <Badge variant="secondary" className="font-mono text-xs">
-                  {item.codebar}
-                </Badge>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() =>
-                        handlePrintBarcode(
-                          item.codebar,
-                          item.marque,
-                          item.SousCategorie?.categorie?.nom || "",
-                          item.SousCategorie?.nom || ""
-                        )
-                      }
-                      className="hover:bg-blue-50"
-                    >
-                      <Printer className="h-4 w-4 text-blue-600" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Print Barcode</TooltipContent>
-                </Tooltip>
+              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                const item = currentData[virtualRow.index];
+                return (
+                  <div
+                    key={item.id}
+                    ref={virtualRow.measureElement}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                  >
+                    {/* ⬇️ your existing row code (unchanged) */}
+                    <div className="flex flex-col md:flex-row items-start justify-start md:items-center md:justify-between p-4 bg-gray-50 rounded-lg">
+                      <Checkbox
+                        checked={selectedItemIds.has(item.id)}
+                        onCheckedChange={(isChecked) =>
+                          handleSelectItem(item.id, isChecked as boolean)
+                        }
+                        aria-label={`Sélectionner ${item.marque}`}
+                        className="flex items-start justify-start"
+                      />
+                      <div className="flex-1 ml-4">
+                        <div className="font-medium font-heading">
+                          {item.marque}
+                        </div>
+                        <div className="text-sm text-gray-600 font-body">
+                          {item.SousCategorie?.categorie?.nom} &gt;{" "}
+                          {item.SousCategorie?.nom}
+                        </div>
+                        <div className="flex flex-wrap gap-2 pl-11">
+                          {item.user?.fullname && (
+                            <Badge
+                              variant="outline"
+                              className="text-xs bg-gray-50"
+                            >
+                              <User className="h-3 w-3 mr-1 text-gray-600" />
+                              {item.user.fullname}
+                            </Badge>
+                          )}
+                          {item.user?.service && (
+                            <Badge
+                              variant="outline"
+                              className="text-xs bg-gray-50"
+                            >
+                              <Building className="h-3 w-3 mr-1 text-gray-600" />
+                              {item.user.service}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
 
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        setSelectedMaterial(item);
-                        setEditOpen(true);
-                      }}
-                      className="hover:bg-green-50"
-                    >
-                      <Edit3 className="h-4 w-4 text-green-600" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Edit Item</TooltipContent>
-                </Tooltip>
-
-                <AlertDialog>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="hover:bg-red-50"
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 mt-3 sm:mt-0">
+                        <Badge
+                          variant="secondary"
+                          className="font-mono text-xs"
                         >
-                          <Trash2 className="h-4 w-4 text-red-600" />
-                        </Button>
-                      </AlertDialogTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent>Delete Item</TooltipContent>
-                  </Tooltip>
+                          {item.codebar}
+                        </Badge>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() =>
+                                handlePrintBarcode(
+                                  item.codebar,
+                                  item.marque,
+                                  item.SousCategorie?.categorie?.nom || "",
+                                  item.SousCategorie?.nom || ""
+                                )
+                              }
+                              className="hover:bg-blue-50"
+                            >
+                              <Printer className="h-4 w-4 text-blue-600" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Print Barcode</TooltipContent>
+                        </Tooltip>
 
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>
-                        Confirmer la suppression
-                      </AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Cette action supprimera définitivement ce matériel.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Annuler</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => handleDelete(item.id)}>
-                        Supprimer
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setSelectedMaterial(item);
+                                setEditOpen(true);
+                              }}
+                              className="hover:bg-green-50"
+                            >
+                              <Edit3 className="h-4 w-4 text-green-600" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Edit Item</TooltipContent>
+                        </Tooltip>
+
+                        <AlertDialog>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="hover:bg-red-50"
+                                >
+                                  <Trash2 className="h-4 w-4 text-red-600" />
+                                </Button>
+                              </AlertDialogTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent>Delete Item</TooltipContent>
+                          </Tooltip>
+
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                Confirmer la suppression
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Cette action supprimera définitivement ce
+                                matériel.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Annuler</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDelete(item.id)}
+                              >
+                                Supprimer
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          ))}
+          </div>
 
           {/* Edit Dialog */}
           <EditMaterialDialog
