@@ -45,6 +45,7 @@ export function AddUserForm() {
     email: "",
     phoneNumber: "",
     service: "",
+    post: "",
     bloc: "",
     position: "",
   });
@@ -67,6 +68,7 @@ export function AddUserForm() {
       email: "",
       phoneNumber: "",
       service: "",
+      post: "",
       bloc: "",
       position: "",
     });

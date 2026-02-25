@@ -77,12 +77,15 @@ import {
   PaginationPrevious,
 } from "./ui/pagination";
 import PdfDownloadButton from "./pdf/PdfDownloadButton";
+import { DechargePDFButton } from "./pdf/DechargePDFButton";
+import SignaturePad from "./pdf/SignaturePad";
 
 const userSchema = z.object({
   fullname: z
     .string()
     .min(3, { message: "Full name must be at least 3 characters." }),
   email: z.string().optional().or(z.literal("")),
+  post: z.string().optional().or(z.literal("")),
   tel: z.string().optional().or(z.literal("")),
   service: z.enum([
     "PROD",
@@ -179,6 +182,7 @@ export interface Material {
 export interface User {
   id: string;
   fullname: string;
+  post: string;
   email?: string;
   tel?: string;
   service: string;
@@ -200,7 +204,7 @@ export function UserManagement() {
     createdAt: string;
     updatedAt?: string;
   };
-
+  const [signature, setSignature] = useState<string | null>(null);
   const [selectedService, setSelectedService] = useState("");
   const [selectedBloc, setSelectedBloc] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -214,7 +218,7 @@ export function UserManagement() {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [isMaterialsDialogOpen, setIsMaterialsDialogOpen] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(
-    null
+    null,
   );
   const [currentPage, setCurrentPage] = useState(1);
   // Pagination state and handlers
@@ -226,6 +230,7 @@ export function UserManagement() {
     resolver: zodResolver(userSchema),
     defaultValues: {
       fullname: "",
+      post: "",
       email: "",
       tel: "",
       service: "IT",
@@ -281,7 +286,14 @@ export function UserManagement() {
 
   const handleAddNew = () => {
     setEditingUser(null);
-    form.reset({ fullname: "", email: "", tel: "", service: "IT", bloc: "1" });
+    form.reset({
+      fullname: "",
+      email: "",
+      tel: "",
+      service: "IT",
+      bloc: "1",
+      post: "",
+    });
     setIsFormOpen(true);
   };
 
@@ -304,7 +316,7 @@ export function UserManagement() {
         {
           method: "DELETE",
           credentials: "include",
-        }
+        },
       );
       if (!res.ok) throw new Error("Failed to delete user");
 
@@ -344,7 +356,7 @@ export function UserManagement() {
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
   const paginatedUsers = filteredUsers.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
   const getPageNumbers = () => {
@@ -380,11 +392,12 @@ export function UserManagement() {
       console.error(err);
     }
   };
-
+  console.log(materials);
   // Fields to display in the dialog (in order)
   const fieldLabels = {
     codebar: "Codebar",
     marque: "Brand",
+    SN: "Serial Number",
     cpu: "CPU",
     ram: "RAM",
     disk: "Disk",
@@ -414,6 +427,19 @@ export function UserManagement() {
         value: material[key as keyof Material],
       }));
   };
+
+  console.log("selected user ", selectedUser);
+
+  const pdfUser = selectedUser
+    ? {
+        fullname: selectedUser.fullname,
+        post: selectedUser.post,
+        service: selectedUser.service,
+        bloc: selectedUser.bloc,
+        email: selectedUser.email,
+        tel: selectedUser.tel,
+      }
+    : undefined;
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
@@ -492,6 +518,21 @@ export function UserManagement() {
                   </div>
 
                   <div className="space-y-2">
+                    <Label className="text-gray-700">
+                      Position / Job Title
+                    </Label>
+                    <Input
+                      {...form.register("post")}
+                      className="focus:ring-2 focus:ring-blue-500"
+                    />
+                    {form.formState.errors.post && (
+                      <p className="text-sm text-red-500">
+                        {form.formState.errors.post.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
                     <Label className="text-gray-700">Email</Label>
                     <Input
                       type="email"
@@ -525,7 +566,7 @@ export function UserManagement() {
                       onValueChange={(value) =>
                         form.setValue(
                           "service",
-                          value as UserFormData["service"]
+                          value as UserFormData["service"],
                         )
                       }
                     >
@@ -1037,7 +1078,7 @@ export function UserManagement() {
                         <p className="text-sm text-slate-400">
                           Last updated{" "}
                           {new Date(
-                            selectedUser.updatedAt
+                            selectedUser.updatedAt,
                           ).toLocaleDateString()}
                         </p>
                       )}
@@ -1045,7 +1086,7 @@ export function UserManagement() {
                         <p className="text-sm text-slate-400">
                           Member since{" "}
                           {new Date(
-                            selectedUser.createdAt
+                            selectedUser.createdAt,
                           ).toLocaleDateString()}
                         </p>
                       )}
@@ -1117,7 +1158,8 @@ export function UserManagement() {
                             {
                               materials.filter(
                                 (m) =>
-                                  m.SousCategorie?.categorie?.nom === "Computer"
+                                  m.SousCategorie?.categorie?.nom ===
+                                  "Computer",
                               ).length
                             }{" "}
                             Computers
@@ -1129,7 +1171,7 @@ export function UserManagement() {
                             {
                               materials.filter(
                                 (m) =>
-                                  m.SousCategorie?.categorie?.nom === "Phone"
+                                  m.SousCategorie?.categorie?.nom === "Phone",
                               ).length
                             }{" "}
                             Phones
@@ -1155,39 +1197,346 @@ export function UserManagement() {
                   </div>
                 )}
 
-                {/* Material Details Dialog */}
                 <Dialog
                   open={!!selectedMaterial}
                   onOpenChange={() => setSelectedMaterial(null)}
                 >
-                  <DialogContent className="max-w-lg">
-                    <DialogHeader>
-                      <DialogTitle>Material Details</DialogTitle>
-                    </DialogHeader>
-                    {selectedMaterial && (
-                      <div className="space-y-3 mt-3">
-                        {getFilteredDetails(selectedMaterial).map(
-                          (item, idx) => (
-                            <div
-                              key={idx}
-                              className="flex justify-between border-b pb-1"
-                            >
-                              <span className="font-medium text-slate-700">
-                                {item.label}
-                              </span>
-                              <span className="text-slate-600">
-                                {typeof item.value === "object" &&
-                                item.value !== null
-                                  ? "nom" in item.value
-                                    ? item.value.nom // if SousCategorie or Categorie
-                                    : JSON.stringify(item.value) // fallback for unknown objects
-                                  : item.value || "-"}
-                              </span>
+                  <DialogContent className="max-w-[95vw] lg:max-w-7xl p-0 overflow-hidden rounded-xl mx-auto">
+                    <div className="relative">
+                      {/* Header */}
+                      <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6">
+                        <DialogHeader>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <DialogTitle className="text-2xl font-bold text-white">
+                                Fiche Technique Matériel
+                              </DialogTitle>
+                              <DialogDescription className="text-blue-100 text-sm mt-1">
+                                Détails complets de l'équipement sélectionné
+                              </DialogDescription>
                             </div>
-                          )
-                        )}
+                            <div className="h-12 w-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
+                              <svg
+                                className="w-6 h-6 text-white"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+                                ></path>
+                              </svg>
+                            </div>
+                          </div>
+                        </DialogHeader>
                       </div>
-                    )}
+
+                      {/* Content */}
+                      {selectedMaterial && (
+                        <div className="p-6 space-y-6">
+                          {/* Main Grid Layout */}
+                          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                            {/* Left Column: Equipment Details */}
+                            <div className="xl:col-span-2">
+                              <div className="bg-white border border-slate-200 rounded-xl p-5">
+                                <div className="flex items-center justify-between mb-5">
+                                  <h3 className="text-lg font-semibold text-slate-800">
+                                    Caractéristiques Techniques
+                                  </h3>
+                                  <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full">
+                                    {
+                                      getFilteredDetails(selectedMaterial)
+                                        .length
+                                    }{" "}
+                                    spécifications
+                                  </span>
+                                </div>
+
+                                <div className="max-h-[55vh] overflow-y-auto pr-3">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {getFilteredDetails(selectedMaterial).map(
+                                      (item, idx) => (
+                                        <div
+                                          key={idx}
+                                          className="bg-slate-50 border border-slate-200 rounded-lg p-4 hover:bg-white hover:border-blue-300 hover:shadow-sm transition-all duration-150"
+                                        >
+                                          <div className="space-y-2">
+                                            <div className="flex items-center gap-2">
+                                              <div className="h-2 w-2 rounded-full bg-blue-500 flex-shrink-0"></div>
+                                              <span className="text-sm font-medium text-slate-700 truncate">
+                                                {item.label}
+                                              </span>
+                                            </div>
+                                            <div className="pl-4">
+                                              <div className="text-slate-900 font-medium text-sm truncate">
+                                                {typeof item.value ===
+                                                  "object" &&
+                                                item.value !== null
+                                                  ? "nom" in item.value
+                                                    ? item.value.nom
+                                                    : JSON.stringify(item.value)
+                                                  : item.value || (
+                                                      <span className="text-slate-400 text-sm italic">
+                                                        Non spécifié
+                                                      </span>
+                                                    )}
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      ),
+                                    )}
+                                  </div>
+
+                                  {/* Empty State */}
+                                  {getFilteredDetails(selectedMaterial)
+                                    .length === 0 && (
+                                    <div className="text-center py-10">
+                                      <div className="h-16 w-16 mx-auto rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                                        <svg
+                                          className="w-8 h-8 text-slate-400"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          viewBox="0 0 24 24"
+                                          xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                          ></path>
+                                        </svg>
+                                      </div>
+                                      <p className="text-slate-500 text-base">
+                                        Aucune information disponible pour ce
+                                        matériel
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-5 mt-6">
+                                <div className="space-y-5">
+                                  <div>
+                                    <h4 className="text-lg font-semibold text-slate-800">
+                                      Résumé
+                                    </h4>
+                                    <p className="text-sm text-slate-600 mt-1">
+                                      Fiche technique complète de l'équipement
+                                    </p>
+                                  </div>
+
+                                  <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-sm text-slate-600">
+                                        Spécifications
+                                      </span>
+                                      <span className="text-base font-semibold text-blue-700">
+                                        {
+                                          getFilteredDetails(selectedMaterial)
+                                            .length
+                                        }
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-sm text-slate-600">
+                                        Date
+                                      </span>
+                                      <span className="text-base font-medium text-slate-800">
+                                        {new Date().toLocaleDateString("fr-FR")}
+                                      </span>
+                                    </div>
+                                    <div className="pt-3 border-t border-blue-100">
+                                      <div className="flex items-center gap-2">
+                                        <svg
+                                          className="w-5 h-5 text-blue-600"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          viewBox="0 0 24 24"
+                                          xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth="2"
+                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                          ></path>
+                                        </svg>
+                                        <span className="text-sm text-slate-700">
+                                          Prêt pour la décharge
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Right Column: Actions & Summary */}
+                            <div className="space-y-6">
+                              {/* Summary Card */}
+
+                              {/* Signature Section */}
+                              <div className="bg-white border border-slate-200 rounded-xl p-5">
+                                <div className="flex items-center gap-2 mb-4">
+                                  <svg
+                                    className="w-5 h-5 text-blue-600"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="2"
+                                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                                    ></path>
+                                  </svg>
+                                  <h4 className="text-lg font-semibold text-slate-800">
+                                    Signature du Responsable
+                                  </h4>
+                                </div>
+                                <div className="space-y-4">
+                                  <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 bg-slate-50 min-h-[120px]">
+                                    <SignaturePad onSave={setSignature} />
+                                  </div>
+
+                                  <div className="text-sm text-slate-500 bg-blue-50 p-3 rounded-lg">
+                                    <p className="flex items-center gap-2">
+                                      <svg
+                                        className="w-4 h-4 text-blue-500"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth="2"
+                                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                        ></path>
+                                      </svg>
+                                      <span>
+                                        Signez pour autoriser la génération du
+                                        PDF
+                                      </span>
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* PDF Generation */}
+                              <div className="bg-white border border-slate-200 rounded-xl p-5">
+                                <div className="space-y-5">
+                                  <div className="flex items-center gap-2">
+                                    <svg
+                                      className="w-6 h-6 text-blue-600"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                      xmlns="http://www.w3.org/2000/svg"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                      ></path>
+                                    </svg>
+                                    <h4 className="text-lg font-semibold text-slate-800">
+                                      Générer la Décharge
+                                    </h4>
+                                  </div>
+
+                                  <DechargePDFButton
+                                    details={getFilteredDetails(
+                                      selectedMaterial,
+                                    )}
+                                    user={pdfUser}
+                                    signature={signature}
+                                    className="w-full"
+                                    disabled={!signature}
+                                  />
+
+                                  <div className="text-sm text-slate-600 space-y-3">
+                                    <div className="flex items-start gap-2">
+                                      <svg
+                                        className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth="2"
+                                          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                                        ></path>
+                                      </svg>
+                                      <span>
+                                        Document officiel DSI avec toutes les
+                                        informations techniques
+                                      </span>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                      <svg
+                                        className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth="2"
+                                          d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"
+                                        ></path>
+                                      </svg>
+                                      <span>
+                                        Signature électronique incluse et
+                                        certifiée
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Close Button */}
+                      <div className="border-t border-slate-200 p-5 bg-slate-50">
+                        <DialogClose asChild>
+                          <button className="w-full py-3.5 text-base font-medium text-slate-700 hover:bg-white border border-slate-300 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2">
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                              ></path>
+                            </svg>
+                            Retour à la liste des matériels
+                          </button>
+                        </DialogClose>
+                      </div>
+                    </div>
                   </DialogContent>
                 </Dialog>
 

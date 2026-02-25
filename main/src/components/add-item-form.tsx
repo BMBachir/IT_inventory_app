@@ -98,6 +98,7 @@ export const AddItemForm: React.FC<AddItemFormProps> = ({
 
   const [formData, setFormData] = useState({
     marque: "",
+    SN: "",
     selectedUserId: "",
     specifications: {
       cpu: "",
@@ -265,6 +266,7 @@ export const AddItemForm: React.FC<AddItemFormProps> = ({
     // Construct the payload to match the 'material' table schema
     const payload = {
       marque: formData.marque,
+      SN: formData.SN || null,
       cpu: formData.specifications.cpu || null,
       ram: formData.specifications.ram || null,
       disk: formData.specifications.disk || null,
@@ -298,6 +300,7 @@ export const AddItemForm: React.FC<AddItemFormProps> = ({
       // Reset the form after successful submission
       setFormData({
         marque: "",
+        SN: "",
         selectedUserId: "",
         specifications: {
           cpu: "",
@@ -324,7 +327,7 @@ export const AddItemForm: React.FC<AddItemFormProps> = ({
       console.error("Error creating asset:", error);
     }
   };
-  console.log("accessoire", formData.specifications);
+
   return (
     <form onSubmit={handleSubmit}>
       <div className="max-w-4xl mx-auto space-y-6">
@@ -484,6 +487,23 @@ export const AddItemForm: React.FC<AddItemFormProps> = ({
                     placeholder="e.g., Dell, HP, Lenovo"
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="marque" className="font-body">
+                    SN
+                  </Label>
+                  <Input
+                    id="SN"
+                    value={formData.SN}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        SN: e.target.value,
+                      }))
+                    }
+                    placeholder="e.g., SD854v521478"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -596,6 +616,7 @@ export const AddItemForm: React.FC<AddItemFormProps> = ({
                 onClick={() => {
                   setFormData({
                     marque: "",
+                    SN: "",
                     selectedUserId: "",
                     specifications: {
                       cpu: "",

@@ -31,6 +31,9 @@ const User = db.define(
         "CERTILAB"
       ),
     },
+    post: {
+      type: DataTypes.STRING(300),
+    },
     bloc: {
       type: DataTypes.ENUM(
         "1",

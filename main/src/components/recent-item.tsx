@@ -107,6 +107,7 @@ function RecentItem() {
   const [selectedService, setSelectedService] = useState("");
   const [selectedBloc, setSelectedBloc] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [showDuplicates, setShowDuplicates] = useState(false);
 
   const [availableServices, setAvailableServices] = useState<string[]>([]);
   const [availableBlocs, setAvailableBlocs] = useState<string[]>([]);
@@ -228,8 +229,35 @@ function RecentItem() {
 
     return matchService && matchBloc && matchSearch;
   });
-  console.log(filterData);
-  const filteredData = [...filterData].sort((a, b) => {
+
+  // ⚡ Ajout logique doublons
+  let filteredData = [...filterData];
+
+  if (showDuplicates) {
+    const map = new Map<string, Material[]>();
+
+    filterData.forEach((item) => {
+      if (!item.codebar) return;
+      const parts = item.codebar.split("-");
+      if (parts.length < 2) return;
+
+      const suffix = `${parts[parts.length - 2]}-${parts[parts.length - 1]}`;
+
+      if (!map.has(suffix)) {
+        map.set(suffix, []);
+      }
+      map.get(suffix)!.push(item);
+    });
+
+    const duplicates = Array.from(map.values()).filter(
+      (items) => items.length > 1
+    );
+
+    filteredData = duplicates.flat();
+  }
+
+  // Tri final
+  filteredData.sort((a, b) => {
     const nameA = a.user?.fullname || "";
     const nameB = b.user?.fullname || "";
     return nameA.localeCompare(nameB);
@@ -622,6 +650,40 @@ function RecentItem() {
     estimateSize: () => 140,
   });
 
+  const checkDuplicatedCodebars = () => {
+    // Regrouper les matériaux par les deux derniers segments
+    const map = new Map<string, Material[]>();
+
+    mat.forEach((item) => {
+      if (!item.codebar) return;
+
+      // Extraire les deux derniers segments du codebar
+      const parts = item.codebar.split("-");
+      if (parts.length < 2) return;
+
+      const suffix = `${parts[parts.length - 2]}-${parts[parts.length - 1]}`;
+
+      if (!map.has(suffix)) {
+        map.set(suffix, []);
+      }
+      map.get(suffix)!.push(item);
+    });
+
+    // Chercher ceux qui apparaissent plus d’une fois
+    const duplicates = Array.from(map.values()).filter(
+      (items) => items.length > 1
+    );
+
+    if (duplicates.length === 0) {
+      toast.success("Aucun doublon trouvé ✅");
+    } else {
+      console.warn("Doublons trouvés:", duplicates);
+      toast.error(
+        `${duplicates.length} doublon(s) trouvé(s). Vérifiez la console.`
+      );
+    }
+  };
+
   return (
     <Card>
       <CardHeader className="bg-gradient-to-r from-gray-50 to-white p-6 border-b border-gray-200">
@@ -900,8 +962,9 @@ function RecentItem() {
 
       <CardContent>
         <div className="space-y-3">
-          <div className="flex items-center justify-between p-4 bg-gray-100 rounded-lg">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between p-4 bg-white border rounded-xl shadow-sm">
+            {/* Sélection de page */}
+            <div className="flex items-center gap-3">
               <Checkbox
                 checked={
                   currentData.length > 0 &&
@@ -911,12 +974,26 @@ function RecentItem() {
                   handleSelectAll(isChecked as boolean)
                 }
                 aria-label="Sélectionner tout"
+                className="h-5 w-5"
               />
-              <span className="font-semibold text-gray-700">
+              <span className="text-sm font-medium text-gray-700">
                 Sélectionner la page actuelle
               </span>
             </div>
+
+            {/* Bouton doublons */}
+            <button
+              onClick={() => setShowDuplicates((prev) => !prev)}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                showDuplicates
+                  ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  : "bg-red-500 text-white hover:bg-red-600"
+              }`}
+            >
+              {showDuplicates ? "Afficher tout" : "Afficher doublons Codebar"}
+            </button>
           </div>
+
           <div
             ref={parentRef}
             style={{ height: "700px", overflow: "auto" }} // make it scrollable

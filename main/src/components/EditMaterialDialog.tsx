@@ -38,6 +38,7 @@ type Specifications = {
 
 type MaterialFormData = {
   marque: string;
+  SN: string;
   selectedUserId: string | null; // Changé pour autoriser `null`
   selectedCategoryId: number | null;
   selectedSubcategoryId: number | null;
@@ -65,6 +66,7 @@ export default function EditMaterialDialog({
 }) {
   const [formData, setFormData] = useState<MaterialFormData>({
     marque: "",
+    SN: "",
     selectedUserId: null,
     selectedCategoryId: null,
     selectedSubcategoryId: null,
@@ -89,6 +91,7 @@ export default function EditMaterialDialog({
     if (material) {
       setFormData({
         marque: material.marque || "",
+        SN: material.SN || "",
         selectedUserId: material.userId?.toString() || null,
         selectedCategoryId: material.categorieId || null,
         selectedSubcategoryId: material.sousCategorieId || null,
@@ -126,6 +129,7 @@ export default function EditMaterialDialog({
 
     const payload = {
       marque: formData.marque,
+      SN: formData.SN,
       userId: formData.selectedUserId,
       categorieId: formData.selectedCategoryId,
       sousCategorieId: formData.selectedSubcategoryId,
@@ -295,6 +299,23 @@ export default function EditMaterialDialog({
                     }))
                   }
                   placeholder="e.g., Dell, HP, Lenovo"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="sn" className="font-body">
+                  SN
+                </Label>
+                <Input
+                  id="SN"
+                  value={formData.SN}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      SN: e.target.value,
+                    }))
+                  }
+                  placeholder="e.g., SC1234567890"
                 />
               </div>
             </div>

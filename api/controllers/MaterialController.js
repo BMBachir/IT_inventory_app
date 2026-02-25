@@ -66,7 +66,7 @@ exports.createMaterial = async (req, res) => {
       include: [
         {
           model: User,
-          attributes: ["id", "fullname", "email", "service", "bloc"],
+          attributes: ["id", "fullname", "email", "service", "bloc", "post"],
         },
         {
           model: SousCategorie,
@@ -205,7 +205,7 @@ exports.updateMaterial = async (req, res) => {
       include: [
         {
           model: User,
-          attributes: ["id", "fullname", "email", "service", "bloc"],
+          attributes: ["id", "fullname", "email", "service", "bloc", "post"],
         },
         {
           model: SousCategorie,
@@ -260,7 +260,15 @@ exports.getAllMaterials = async (req, res) => {
       include: [
         {
           model: User,
-          attributes: ["id", "fullname", "email", "service", "bloc", "tel"],
+          attributes: [
+            "id",
+            "fullname",
+            "email",
+            "service",
+            "bloc",
+            "tel",
+            "post",
+          ],
         },
         {
           model: SousCategorie,
@@ -292,7 +300,7 @@ exports.getMaterialsByUser = async (req, res) => {
       include: [
         {
           model: User,
-          attributes: ["id", "fullname", "email", "service", "bloc"],
+          attributes: ["id", "fullname", "email", "service", "bloc", "post"],
         },
         {
           model: SousCategorie,

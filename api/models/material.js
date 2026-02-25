@@ -37,6 +37,10 @@ const Material = db.define(
       type: DataTypes.TEXT,
       allowNull: true,
     },
+    SN: {
+      type: DataTypes.STRING(200),
+      allowNull: true, // or false if required
+    },
 
     userId: {
       type: DataTypes.INTEGER,
