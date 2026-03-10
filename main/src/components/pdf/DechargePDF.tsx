@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
     width: "46%",
   },
   signatureField: {
-    height: 40,
+    minHeight: 100,
     borderWidth: 1,
     borderColor: "#cbd5e1",
     borderStyle: "dashed",
@@ -177,11 +177,12 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f8fafc",
+    backgroundColor: "rgba(240, 249, 255, 0.2)",
   },
   signatureLabel: {
     fontSize: 9,
     color: "#64748b",
+    textAlign: "center",
     fontStyle: "italic",
   },
   signatureInfo: {
@@ -444,21 +445,22 @@ export function DechargePDF({
           <Text style={styles.signatureTitle}>APPROBATIONS ET SIGNATURES</Text>
           <View style={styles.signatureRow}>
             <View style={styles.signatureBox}>
+              <View style={{ alignItems: "center", marginBottom: 4 }}>
+                <Text style={styles.signatureLabel}>
+                  Signature de l'utilisateur
+                </Text>
+              </View>
               <View style={styles.signatureField}>
                 {signature ? (
                   <Image
                     src={signature}
                     style={{
-                      width: 120,
-                      height: 40,
+                      width: "100%", // fill box width
+                      height: "100%", // fill box height
                       objectFit: "contain",
                     }}
                   />
-                ) : (
-                  <Text style={styles.signatureLabel}>
-                    Signature de l'utilisateur
-                  </Text>
-                )}
+                ) : null}
               </View>
 
               <Text style={styles.signatureInfo}>Nom : M.{user?.fullname}</Text>
@@ -466,8 +468,20 @@ export function DechargePDF({
             </View>
 
             <View style={styles.signatureBox}>
-              <View style={styles.signatureField}>
+              <View style={{ alignItems: "center", marginBottom: 4 }}>
                 <Text style={styles.signatureLabel}>Signature DSI</Text>
+              </View>
+              <View style={styles.signatureField}>
+                {signature ? (
+                  <Image
+                    src={signature}
+                    style={{
+                      width: "100%", // fill box width
+                      height: "100%", // fill box height
+                      objectFit: "contain",
+                    }}
+                  />
+                ) : null}
               </View>
               <Text style={styles.signatureInfo}>
                 Direction des Systèmes d'Information

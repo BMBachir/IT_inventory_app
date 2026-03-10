@@ -12,7 +12,6 @@ const SousCategorie = db.define(
     code: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true, // ✅ Keep it unique, not primary
     },
     nom: {
       type: DataTypes.STRING(255),
@@ -27,10 +26,11 @@ const SousCategorie = db.define(
       },
     },
   },
+  { indexes: [{ unique: true, fields: ["code"] }] },
   {
     timestamps: true,
     freezeTableName: true,
-  }
+  },
 );
 
 module.exports = SousCategorie;
