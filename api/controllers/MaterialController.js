@@ -1,4 +1,7 @@
-const { Material, User, SousCategorie, Categorie } = require("../models");
+const Material = require("../models/material");
+const User = require("../models/user");
+const SousCategorie = require("../models/sousCategorie");
+const Categorie = require("../models/categorie");
 const ActionHistory = require("../models/actionHistory");
 const { Op } = require("sequelize");
 exports.createMaterial = async (req, res) => {
@@ -99,13 +102,13 @@ exports.updateMaterial = async (req, res) => {
     if (!material) {
       return res.status(404).json({ message: "Material not found" });
     }
-
     const oldValues = material.toJSON();
-
     let user = null;
-    if (userId) {
-      user = await User.findByPk(userId);
 
+    if (userId) {
+      user = await User.findOne({
+        where: { id: userId },
+      });
       if (!user) {
         return res.status(400).json({ message: "User not found" });
       }
@@ -147,7 +150,7 @@ exports.updateMaterial = async (req, res) => {
               const match = m.codebar?.match(/(\d{4})$/);
               return match ? parseInt(match[1], 10) : null;
             })
-            .filter((n) => n !== null)
+            .filter((n) => n !== null),
         ),
       ].sort((a, b) => a - b);
 
@@ -176,7 +179,7 @@ exports.updateMaterial = async (req, res) => {
       const match = material.codebar.match(/(\d{4})$/);
       const seq = match ? match[1] : "0001";
 
-      const sousCode = sousCategorie?.code || material.sousCategorie.code;
+      const sousCode = material.sousCategorieId;
 
       codebar = `B${user.bloc}-${user.service}-${sousCode}-${seq}`;
     }
@@ -186,17 +189,27 @@ exports.updateMaterial = async (req, res) => {
     const newValues = material.toJSON();
 
     for (const key of Object.keys(newValues)) {
+      if (key === "createdAt" || key === "updatedAt") continue;
       if (oldValues[key] !== newValues[key]) {
+        let oldVal = oldValues[key];
+        let newVal = newValues[key];
+
+        if (key === "userId") {
+          const oldUser = await User.findByPk(oldValues[key]);
+          const newUser = await User.findByPk(newValues[key]);
+
+          oldVal = oldUser ? oldUser.fullname : null;
+          newVal = newUser ? newUser.fullname : null;
+        }
+
         await ActionHistory.create({
           entityType: "Material",
           entityId: material.id,
           userId: req.user.id,
           actionType: "updated",
           fieldName: key,
-          oldValue:
-            oldValues[key] !== undefined ? String(oldValues[key]) : null,
-          newValue:
-            newValues[key] !== undefined ? String(newValues[key]) : null,
+          oldValue: oldVal ? String(oldVal) : null,
+          newValue: newVal ? String(newVal) : null,
         });
       }
     }
@@ -225,7 +238,7 @@ exports.updateMaterial = async (req, res) => {
     res.status(200).json(updatedMaterial);
   } catch (error) {
     //console.error("Update error:", error);
-    res.status(500).json({ message: "Failed to update material." });
+    res.status(500).json({ message: "Failed to update material." + error });
   }
 };
 

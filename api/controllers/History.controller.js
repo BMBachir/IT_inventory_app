@@ -11,7 +11,7 @@ exports.getAllHistories = async (req, res) => {
         {
           model: Auth,
           as: "admin",
-          attributes: ["id", "username"], // celui qui a fait l'action
+          attributes: ["id", "username"],
         },
       ],
       order: [["createdAt", "DESC"]],
@@ -37,7 +37,7 @@ exports.getAllHistories = async (req, res) => {
           ],
           attributes: ["id", "marque"],
         });
-        console.log(material);
+
         entityDetails = material
           ? {
               type: "Material",

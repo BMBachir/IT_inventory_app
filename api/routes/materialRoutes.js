@@ -10,42 +10,42 @@ router.post(
   "/create",
   authenticateUser,
   authorizeAdmin,
-  materialController.createMaterial
+  materialController.createMaterial,
 );
 
 router.get(
   "/",
   authenticateUser,
   authorizeAdmin,
-  materialController.getAllMaterials
+  materialController.getAllMaterials,
 );
 
 router.get(
   "/by-user/:userId",
   authenticateUser,
   authorizeAdmin,
-  materialController.getMaterialsByUser
+  materialController.getMaterialsByUser,
 );
 
 router.get(
   "/:codebar",
   authenticateUser,
   authorizeAdmin,
-  materialController.getMaterialByCode
+  materialController.getMaterialByCode,
 );
 
 router.put(
   "/update/:id",
   authenticateUser,
   authorizeAdmin,
-  materialController.updateMaterial
+  materialController.updateMaterial,
 );
 
 router.delete(
   "/delete/:id",
   authenticateUser,
   authorizeAdmin,
-  materialController.deleteMaterial
+  materialController.deleteMaterial,
 );
 
 module.exports = router;
