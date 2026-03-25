@@ -35,15 +35,16 @@ exports.getAllHistories = async (req, res) => {
               attributes: ["id", "fullname"],
             },
           ],
-          attributes: ["id", "marque"],
+          attributes: ["id", "marque", "codebar"],
         });
 
+        const code = material.codebar.split("-");
+        const codebar = code.slice(2).join("-");
         entityDetails = material
           ? {
               type: "Material",
-              label: `${material.SousCategorie?.nom || ""} - ${
-                material.marque
-              }`,
+              label: `${codebar || ""} 
+              `,
               owner: material.user?.fullname || null,
             }
           : null;
