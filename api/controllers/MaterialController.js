@@ -245,25 +245,34 @@ exports.updateMaterial = async (req, res) => {
 // 🔹 Delete Material
 exports.deleteMaterial = async (req, res) => {
   try {
-    const material = await Material.findByPk(req.params.id);
+    const id = Number(req.params.id); // ensure number
+    const material = await Material.findByPk(id);
+
     if (!material)
       return res.status(404).json({ message: "Material not found" });
 
-    await material.destroy();
+    const codebar = material.codebar;
 
     await ActionHistory.create({
       entityType: "Material",
-      entityId: Material.id,
+      entityId: id,
       userId: req.user.id,
       actionType: "deleted",
       fieldName: null,
       oldValue: null,
       newValue: null,
     });
-    res.status(200).json({ message: "Material deleted successfully." });
+    await material.destroy();
+    res.status(200).json({
+      message: "Material deleted successfully.",
+      deleted: {
+        id,
+        codebar,
+      },
+    });
   } catch (error) {
     //console.error("Delete error:", error);
-    res.status(500).json({ message: "Failed to delete material." });
+    res.status(500).json({ message: "Failed to delete material." + error });
   }
 };
 

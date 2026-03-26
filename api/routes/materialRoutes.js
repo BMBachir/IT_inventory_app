@@ -26,14 +26,11 @@ router.get(
   authorizeAdmin,
   materialController.getMaterialsByUser,
 );
+router.delete(
+  "/delete/:id",
 
-router.get(
-  "/:codebar",
-  authenticateUser,
-  authorizeAdmin,
-  materialController.getMaterialByCode,
+  materialController.deleteMaterial,
 );
-
 router.put(
   "/update/:id",
   authenticateUser,
@@ -41,11 +38,11 @@ router.put(
   materialController.updateMaterial,
 );
 
-router.delete(
-  "/delete/:id",
+router.get(
+  "/:codebar",
   authenticateUser,
   authorizeAdmin,
-  materialController.deleteMaterial,
+  materialController.getMaterialByCode,
 );
 
 module.exports = router;

@@ -37,9 +37,11 @@ exports.getAllHistories = async (req, res) => {
           ],
           attributes: ["id", "marque", "codebar"],
         });
-
-        const code = material.codebar.split("-");
-        const codebar = code.slice(2).join("-");
+        let codebar = "";
+        if (material?.codebar) {
+          const code = material.codebar.split("-");
+          codebar = code.slice(2).join("-");
+        }
         entityDetails = material
           ? {
               type: "Material",

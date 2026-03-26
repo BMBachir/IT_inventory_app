@@ -117,11 +117,11 @@ function RecentItem() {
   const [tempSearch, setTempSearch] = useState("");
   const [editOpen, setEditOpen] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(
-    null
+    null,
   );
 
   const [selectedItemIds, setSelectedItemIds] = useState<Set<number>>(
-    new Set()
+    new Set(),
   );
   const [open, setOpen] = useState(false);
   const [itemsPerPage, setItemsPerPage] = useState(80);
@@ -138,7 +138,7 @@ function RecentItem() {
       if (!Array.isArray(data)) {
         console.error("API response is not an array:", data);
         toast.error(
-          "Format de données inattendu de l'API. Impossible de charger les matériaux."
+          "Format de données inattendu de l'API. Impossible de charger les matériaux.",
         );
         setMat([]); // Ensure 'mat' is an empty array to prevent further errors
         return; // Stop execution if data is not an array
@@ -147,13 +147,13 @@ function RecentItem() {
       console.log(data);
       setAvailableServices([
         ...new Set(
-          data.map((item) => item.user?.service).filter(Boolean) as string[]
+          data.map((item) => item.user?.service).filter(Boolean) as string[],
         ),
       ]);
 
       setAvailableBlocs([
         ...new Set(
-          data.map((item) => item.user?.bloc).filter(Boolean) as string[]
+          data.map((item) => item.user?.bloc).filter(Boolean) as string[],
         ),
       ]);
     } catch (err) {
@@ -250,7 +250,7 @@ function RecentItem() {
     });
 
     const duplicates = Array.from(map.values()).filter(
-      (items) => items.length > 1
+      (items) => items.length > 1,
     );
 
     filteredData = duplicates.flat();
@@ -296,7 +296,7 @@ function RecentItem() {
       ...new Set(
         servicesBasedOnOtherFilters
           .map((item) => item.user?.service)
-          .filter((service): service is string => typeof service === "string")
+          .filter((service): service is string => typeof service === "string"),
       ),
     ]);
 
@@ -328,7 +328,7 @@ function RecentItem() {
       ...new Set(
         blocsBasedOnOtherFilters
           .map((item) => item.user?.bloc)
-          .filter((bloc): bloc is string => typeof bloc === "string")
+          .filter((bloc): bloc is string => typeof bloc === "string"),
       ),
     ]);
   }, [selectedService, selectedBloc, searchTerm, mat]);
@@ -339,7 +339,7 @@ function RecentItem() {
   const endPage = Math.min(startPage + pageWindowSize - 1, totalPages);
   const currentData = filteredData.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
   const handlePageChange = (page: number) => {
@@ -373,7 +373,7 @@ function RecentItem() {
     itemName: string,
     categorie: string,
     SousCategorie: string,
-    isFirst: boolean
+    isFirst: boolean,
   ) => {
     const pageBreakClass = isFirst ? "" : "page-break-new-label";
 
@@ -404,7 +404,7 @@ function RecentItem() {
     barcodeValue: string,
     itemName: string,
     categorie: string,
-    sousCategorie: string
+    sousCategorie: string,
   ) => {
     const printWindow = window.open("", "_blank", "width=200,height=150");
     if (!printWindow) {
@@ -418,7 +418,7 @@ function RecentItem() {
       itemName,
       categorie,
       sousCategorie,
-      true
+      true,
     );
 
     printWindow.document.write(`
@@ -470,7 +470,7 @@ function RecentItem() {
     }
 
     const selectedItems = currentData.filter((item) =>
-      selectedItemIds.has(item.id)
+      selectedItemIds.has(item.id),
     );
 
     let allBarcodesHtml = "";
@@ -481,7 +481,7 @@ function RecentItem() {
         item.marque,
         item.SousCategorie?.categorie?.nom || "",
         item.SousCategorie?.nom || "",
-        index === 0
+        index === 0,
       );
     });
 
@@ -587,7 +587,7 @@ function RecentItem() {
   const handleDownloadExcel = () => {
     // Get selected items
     const selectedItems = currentData.filter((item) =>
-      selectedItemIds.has(item.id)
+      selectedItemIds.has(item.id),
     );
 
     if (selectedItems.length === 0) {
@@ -629,7 +629,7 @@ function RecentItem() {
     const colWidths = Object.keys(dataForExcel[0]).map((key) => ({
       wch: Math.max(
         key.length,
-        ...dataForExcel.map((row) => String(row[key] || "").length)
+        ...dataForExcel.map((row) => String(row[key] || "").length),
       ),
     }));
     worksheet["!cols"] = colWidths;
@@ -671,7 +671,7 @@ function RecentItem() {
 
     // Chercher ceux qui apparaissent plus d’une fois
     const duplicates = Array.from(map.values()).filter(
-      (items) => items.length > 1
+      (items) => items.length > 1,
     );
 
     if (duplicates.length === 0) {
@@ -679,7 +679,7 @@ function RecentItem() {
     } else {
       console.warn("Doublons trouvés:", duplicates);
       toast.error(
-        `${duplicates.length} doublon(s) trouvé(s). Vérifiez la console.`
+        `${duplicates.length} doublon(s) trouvé(s). Vérifiez la console.`,
       );
     }
   };
@@ -1077,7 +1077,7 @@ function RecentItem() {
                                   item.codebar,
                                   item.marque,
                                   item.SousCategorie?.categorie?.nom || "",
-                                  item.SousCategorie?.nom || ""
+                                  item.SousCategorie?.nom || "",
                                 )
                               }
                               className="hover:bg-blue-50"
