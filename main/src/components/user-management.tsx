@@ -78,6 +78,7 @@ import {
 } from "./ui/pagination";
 import PdfDownloadButton from "./pdf/PdfDownloadButton";
 import { DechargePDFButton } from "./pdf/DechargePDFButton";
+import MaterialToggle from "./toggleMaterial";
 import SignaturePad from "./pdf/SignaturePad";
 
 const userSchema = z.object({
@@ -187,6 +188,7 @@ export interface User {
   tel?: string;
   service: string;
   bloc: string;
+  isActive?: boolean;
   createdAt: string;
   updatedAt?: string;
 }
@@ -848,6 +850,7 @@ export function UserManagement() {
                     </TableCell>
                     <TableCell className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
+                        <MaterialToggle id={user.id} initial={user.isActive} />
                         <Button
                           variant="outline"
                           size="sm"

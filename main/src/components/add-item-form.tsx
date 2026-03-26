@@ -89,7 +89,7 @@ export const AddItemForm: React.FC<AddItemFormProps> = ({
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<number | null>(
-    null
+    null,
   );
   const [users, setUsers] = useState<User[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -162,7 +162,7 @@ export const AddItemForm: React.FC<AddItemFormProps> = ({
     const fetchData = async () => {
       try {
         const [userRes, catRes, subRes] = await Promise.all([
-          fetch(`${API_BASE}/api/users`, {
+          fetch(`${API_BASE}/api/users/ActiveUsers/`, {
             method: "GET",
             credentials: "include",
           }).then((res) => res.json()),
@@ -192,7 +192,7 @@ export const AddItemForm: React.FC<AddItemFormProps> = ({
     : [];
 
   const selectedUser = users.find(
-    (u) => String(u.id) === formData.selectedUserId
+    (u) => String(u.id) === formData.selectedUserId,
   );
   const category = selectedCategory
     ? categories.find((c) => c.code === selectedCategory)
@@ -211,7 +211,7 @@ export const AddItemForm: React.FC<AddItemFormProps> = ({
     ) {
       return allFixedSpecifications.filter(
         (spec) =>
-          !["adf", "clavier", "souris", "usb", "ecran"].includes(spec.id)
+          !["adf", "clavier", "souris", "usb", "ecran"].includes(spec.id),
       );
     }
 
@@ -221,7 +221,7 @@ export const AddItemForm: React.FC<AddItemFormProps> = ({
       subcategory.nom.toUpperCase() === "LAPTOP"
     ) {
       return allFixedSpecifications.filter(
-        (spec) => !["ncpu", "nram", "ndisk", "adf"].includes(spec.id)
+        (spec) => !["ncpu", "nram", "ndisk", "adf"].includes(spec.id),
       );
     }
 
@@ -356,7 +356,7 @@ export const AddItemForm: React.FC<AddItemFormProps> = ({
                       {formData.selectedUserId
                         ? users.find(
                             (user) =>
-                              user.id.toString() === formData.selectedUserId
+                              user.id.toString() === formData.selectedUserId,
                           )?.fullname
                         : "Select user to assign this asset..."}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -376,7 +376,7 @@ export const AddItemForm: React.FC<AddItemFormProps> = ({
                                 const selectedUser = users.find(
                                   (u) =>
                                     u.fullname.toLowerCase() ===
-                                    currentValue.toLowerCase()
+                                    currentValue.toLowerCase(),
                                 );
                                 if (selectedUser) {
                                   setFormData((prev) => ({
@@ -392,7 +392,7 @@ export const AddItemForm: React.FC<AddItemFormProps> = ({
                                   "mr-2 h-4 w-4",
                                   formData.selectedUserId === user.id.toString()
                                     ? "opacity-100"
-                                    : "opacity-0"
+                                    : "opacity-0",
                                 )}
                               />
                               <div className="flex flex-col">
@@ -525,13 +525,13 @@ export const AddItemForm: React.FC<AddItemFormProps> = ({
                             formData.specifications.adf === null
                               ? ""
                               : formData.specifications.adf === 1
-                              ? "yes"
-                              : "no"
+                                ? "yes"
+                                : "no"
                           }
                           onValueChange={(value) =>
                             handleSpecificationChange(
                               "adf",
-                              value === "yes" ? 1 : 0
+                              value === "yes" ? 1 : 0,
                             )
                           }
                         >
@@ -566,7 +566,7 @@ export const AddItemForm: React.FC<AddItemFormProps> = ({
                               specKey,
                               e.target.value === ""
                                 ? null
-                                : Number(e.target.value)
+                                : Number(e.target.value),
                             )
                           }
                           placeholder={spec.placeholder}

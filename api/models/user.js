@@ -28,7 +28,7 @@ const User = db.define(
         "HSE",
         "SECRT",
         "QUALITE",
-        "CERTILAB"
+        "CERTILAB",
       ),
     },
     post: {
@@ -47,7 +47,7 @@ const User = db.define(
         "H1",
         "H2",
         "H3",
-        "H4"
+        "H4",
       ),
     },
     email: {
@@ -56,11 +56,14 @@ const User = db.define(
     tel: {
       type: DataTypes.STRING(300),
     },
+    isActive: {
+      type: DataTypes.BOOLEAN,
+    },
   },
   {
     timestampes: false,
     freezeTableName: true,
-  }
+  },
 );
 
 module.exports = User;

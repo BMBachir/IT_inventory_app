@@ -10,27 +10,39 @@ router.post(
   "/create",
   authenticateUser,
   authorizeAdmin,
-  userController.createUser
+  userController.createUser,
 );
 
 router.get("/", authenticateUser, authorizeAdmin, userController.getAllUsers);
 router.get(
+  "/ActiveUsers",
+  authenticateUser,
+  authorizeAdmin,
+  userController.getAllActiveUsers,
+);
+router.get(
   "/:id",
   authenticateUser,
   authorizeAdmin,
-  userController.getUserById
+  userController.getUserById,
+);
+router.patch(
+  "/updateStatus/:id",
+  authenticateUser,
+  authorizeAdmin,
+  userController.updateStatus,
 );
 router.put(
   "/update/:id",
   authenticateUser,
   authorizeAdmin,
-  userController.updateUser
+  userController.updateUser,
 );
 router.delete(
   "/delete/:id",
   authenticateUser,
   authorizeAdmin,
-  userController.deleteUser
+  userController.deleteUser,
 );
 
 module.exports = router;

@@ -1,3 +1,4 @@
+const { where } = require("sequelize");
 const ActionHistory = require("../models/actionHistory");
 const Material = require("../models/material");
 const User = require("../models/user");
@@ -25,6 +26,17 @@ exports.createUser = async (req, res) => {
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.findAll({
+      order: [["fullname", "ASC"]],
+    });
+    res.status(200).json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+exports.getAllActiveUsers = async (req, res) => {
+  try {
+    const users = await User.findAll({
+      where: { isActive: 1 },
       order: [["fullname", "ASC"]],
     });
     res.status(200).json(users);
@@ -116,6 +128,47 @@ exports.updateUser = async (req, res) => {
     res.status(200).json({ message: "User updated", user });
   } catch (err) {
     console.error("Update user error:", err);
+    res.status(400).json({ error: err.message });
+  }
+};
+
+// Update only the isactive attribute
+exports.updateStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isActive } = req.body;
+
+    if (isActive === undefined)
+      return res.status(400).json({ message: "isactive is required (0 or 1)" });
+
+    const user = await User.findByPk(id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const oldValue = String(user.isActive);
+    const newValue = String(isActive);
+
+    // Update only isactive
+    await user.update({ isActive });
+
+    // Log to history only if changed
+    if (oldValue !== newValue) {
+      await ActionHistory.create({
+        entityType: "User",
+        entityId: user.id,
+        userId: req.user.id,
+        actionType: "updated",
+        fieldName: "isactive",
+        oldValue,
+        newValue,
+      });
+    }
+
+    res.status(200).json({
+      message: "User status updated",
+      user,
+    });
+  } catch (err) {
+    console.error("Update isactive error:", err);
     res.status(400).json({ error: err.message });
   }
 };
