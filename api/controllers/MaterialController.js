@@ -61,9 +61,9 @@ exports.createMaterial = async (req, res) => {
       entityId: newMaterial.id,
       userId: req.user.id,
       actionType: "created",
-      fieldName: null,
+      fieldName: "codebar",
       oldValue: null,
-      newValue: null,
+      newValue: newMaterial.codebar,
     });
     const fullMaterial = await Material.findByPk(newMaterial.id, {
       include: [
@@ -259,7 +259,10 @@ exports.deleteMaterial = async (req, res) => {
       userId: req.user.id,
       actionType: "deleted",
       fieldName: null,
-      oldValue: null,
+      oldValue: JSON.stringify({
+        codebar: material.codebar,
+        marque: material.marque,
+      }),
       newValue: null,
     });
     await material.destroy();

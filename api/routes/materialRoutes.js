@@ -28,7 +28,8 @@ router.get(
 );
 router.delete(
   "/delete/:id",
-
+  authenticateUser,
+  authorizeAdmin,
   materialController.deleteMaterial,
 );
 router.put(

@@ -1105,7 +1105,7 @@ function RecentItem() {
                           <TooltipContent>Edit Item</TooltipContent>
                         </Tooltip>
 
-                        <AlertDialog>
+                        {/*   <AlertDialog>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <AlertDialogTrigger asChild>
@@ -1140,7 +1140,7 @@ function RecentItem() {
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
-                        </AlertDialog>
+                        </AlertDialog> */}
                       </div>
                     </div>
                   </div>
