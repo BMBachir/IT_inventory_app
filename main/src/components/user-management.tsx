@@ -248,6 +248,7 @@ export function UserManagement() {
         credentials: "include",
       });
       const data = await res.json();
+      console.log("data of users ", data);
       setUsers(data);
       setError(null);
     } catch (err) {
@@ -429,8 +430,6 @@ export function UserManagement() {
         value: material[key as keyof Material],
       }));
   };
-
-  console.log("selected user ", selectedUser);
 
   const pdfUser = selectedUser
     ? {
